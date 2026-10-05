@@ -251,7 +251,7 @@
 <div class="rv-card reveal" style="margin-bottom:18px;">
   <div class="rv-card__head">
     <h3><i class="ti ti-chart-line"></i> Monthly revenue</h3>
-    <span class="rv-card__src">payments.txt &middot; last 4 months</span>
+    <span class="rv-card__src">MSSQL payments &middot; last 4 months</span>
   </div>
   <c:choose>
     <c:when test="${not empty monthly}">
@@ -333,7 +333,7 @@
 <div class="rv-card reveal" style="margin-top:18px;">
   <div class="rv-card__head">
     <h3><i class="ti ti-table"></i> Monthly revenue (table view)</h3>
-    <span class="rv-card__src">data/payments.txt</span>
+    <span class="rv-card__src">Microsoft SQL Server</span>
   </div>
   <c:if test="${not empty monthly}">
     <c:set var="maxVal" value="0"/>
@@ -383,12 +383,12 @@
         type: 'line',
         data: { labels: monthlyLabels, datasets: [{
           label: 'LKR', data: monthlyValues,
-          borderColor: VRMS_CHART.primary, backgroundColor: grad,
+          borderColor: RIDELANKA_CHART.primary, backgroundColor: grad,
           tension: 0.35, fill: true, pointRadius: 3, pointHoverRadius: 5
         }]},
         options: { responsive: true, plugins: { legend: { display: false },
           tooltip: { callbacks: { label: function (c) { return 'LKR ' + c.parsed.y.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); } } } },
-          scales: { y: { grid: { color: VRMS_CHART.gridColor }}, x: { grid: { display: false } } } }
+          scales: { y: { grid: { color: RIDELANKA_CHART.gridColor }}, x: { grid: { display: false } } } }
       });
     }
 
@@ -432,12 +432,12 @@
         datasets: [{
           label: 'Rentals',
           data: [<c:forEach var="e" items="${topN}" varStatus="s">${e.value}<c:if test="${!s.last}">,</c:if></c:forEach>],
-          backgroundColor: VRMS_CHART.primarySoft,
-          borderColor: VRMS_CHART.primary, borderWidth: 1
+          backgroundColor: RIDELANKA_CHART.primarySoft,
+          borderColor: RIDELANKA_CHART.primary, borderWidth: 1
         }]
       },
       options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } },
-        scales: { x: { grid: { color: VRMS_CHART.gridColor }, beginAtZero: true, ticks: { precision: 0 } },
+        scales: { x: { grid: { color: RIDELANKA_CHART.gridColor }, beginAtZero: true, ticks: { precision: 0 } },
                   y: { grid: { display: false } } } }
     });
   })();

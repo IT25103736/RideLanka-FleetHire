@@ -372,14 +372,13 @@
             </c:choose>
             <span class="veh-card__chip veh-card__chip--type">${v.type}</span>
             <c:choose>
-              <c:when test="${v.type == 'Van'}">
-                <c:set var="cardFallback" value="https://images.pexels.com/photos/2920064/pexels-photo-2920064.jpeg?auto=compress&cs=tinysrgb&w=900"/>
+              <c:when test="${not empty v.imageUrl}">
+                <img src="${v.imageUrl}" alt="${v.brand} ${v.model}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/images/vehicles/default-vehicle.jpg'"/>
               </c:when>
               <c:otherwise>
-                <c:set var="cardFallback" value="https://images.pexels.com/photos/170811/pexels-photo-170811.jpeg?auto=compress&cs=tinysrgb&w=900"/>
+                <div style="height:100%;min-height:210px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#182331,#0b1118);color:rgba(255,255,255,.58)"><i class="ti ti-car" style="font-size:42px;color:var(--bx-primary)"></i><span>No vehicle photo uploaded</span></div>
               </c:otherwise>
             </c:choose>
-            <img src="${not empty v.imageUrl ? v.imageUrl : cardFallback}" alt="${v.brand} ${v.model}" loading="lazy" decoding="async"/>
           </a>
           <c:if test="${v.available}">
             <button class="veh-card__fav" aria-label="Save" style="position:absolute; top:14px; right:14px; z-index:3;"><i class="ti ti-heart"></i></button>
@@ -421,8 +420,8 @@
                   <span class="veh-card__spec"><i class="ti ti-truck-loading"></i> ${v.extraField} pax</span>
                 </c:when>
               </c:choose>
-              <span class="veh-card__spec"><i class="ti ti-gas-station"></i> Hybrid</span>
-              <span class="veh-card__spec"><i class="ti ti-settings"></i> Automatic</span>
+              <span class="veh-card__spec"><i class="ti ti-gas-station"></i> ${v.fuelType}</span>
+              <span class="veh-card__spec"><i class="ti ti-settings"></i> ${v.transmission}</span>
             </div>
 
             <div class="veh-card__foot">

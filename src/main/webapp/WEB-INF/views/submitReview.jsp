@@ -213,13 +213,13 @@
           <div class="sr-fld">
             <label class="sr-fld__lbl" for="vehicleId">Vehicle ID<span class="req">*</span></label>
             <input type="text" id="vehicleId" name="vehicleId"
-                   placeholder="e.g. V001" value="${param.vehicleId}" required/>
+                   placeholder="e.g. V001" value="${param.vehicleId}" maxlength="20" required/>
           </div>
 
           <div class="sr-fld">
             <label class="sr-fld__lbl" for="bookingId">Booking ID <span style="color:rgba(255,255,255,0.4); font-weight:400; text-transform:none; letter-spacing:0;">(optional)</span></label>
             <input type="text" id="bookingId" name="bookingId"
-                   placeholder="e.g. B-0041" value="${param.bookingId}"/>
+                   placeholder="e.g. B-0041" value="${param.bookingId}" maxlength="20"/>
           </div>
 
           <div class="sr-fld sr-full">
@@ -252,13 +252,13 @@
           <div class="sr-fld sr-full">
             <label class="sr-fld__lbl" for="title">Review title <span style="color:rgba(255,255,255,0.4); font-weight:400; text-transform:none; letter-spacing:0;">(optional)</span></label>
             <input type="text" id="title" name="title"
-                   placeholder="e.g. Great experience, clean car!"/>
+                   placeholder="e.g. Great experience, clean car!" maxlength="120"/>
           </div>
 
           <div class="sr-fld sr-full">
             <label class="sr-fld__lbl" for="comment">Your comment<span class="req">*</span></label>
             <textarea id="comment" name="comment"
-                      placeholder="Describe your rental experience &mdash; what worked, what didn't, who you'd recommend it to..." required></textarea>
+                      placeholder="Describe your rental experience &mdash; what worked, what didn't, who you'd recommend it to..." minlength="5" maxlength="1000" required></textarea>
           </div>
 
         </div>

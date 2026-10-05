@@ -392,39 +392,22 @@
             <span class="vd-gallery__chip vd-gallery__chip--unavail">Currently Unavailable</span>
           </c:otherwise>
         </c:choose>
-        <%-- Per-type fallback gallery (used when no admin-supplied imageUrl) --%>
         <c:choose>
-          <c:when test="${vehicle.vehicleType == 'Van'}">
-            <c:set var="img1" value="2920064"/>
-            <c:set var="img2" value="1280317"/>
-            <c:set var="img3" value="1592384"/>
-            <c:set var="img4" value="3786091"/>
+          <c:when test="${not empty vehicle.imageUrl}">
+            <img id="vdHero" src="${vehicle.imageUrl}" alt="${vehicle.brand} ${vehicle.model}" decoding="async" fetchpriority="high" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/images/vehicles/default-vehicle.jpg'"/>
           </c:when>
           <c:otherwise>
-            <c:set var="img1" value="170811"/>
-            <c:set var="img2" value="1429775"/>
-            <c:set var="img3" value="116675"/>
-            <c:set var="img4" value="244206"/>
+            <div style="height:100%;min-height:420px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,#182331,#0b1118);color:rgba(255,255,255,.62)">
+              <i class="ti ti-car" style="font-size:64px;color:var(--bx-primary)"></i>
+              <strong>No vehicle photo uploaded</strong>
+              <span style="font-size:12px">Vehicle Management can add a verified image URL for this exact vehicle.</span>
+            </div>
           </c:otherwise>
         </c:choose>
-        <c:set var="fallback1" value="https://images.pexels.com/photos/${img1}/pexels-photo-${img1}.jpeg?auto=compress&cs=tinysrgb&w=1400"/>
-        <c:set var="hero"      value="${not empty vehicle.imageUrl ? vehicle.imageUrl : fallback1}"/>
-        <img id="vdHero" src="${hero}" alt="${vehicle.brand} ${vehicle.model}" decoding="async" fetchpriority="high"/>
       </div>
-      <div class="vd-gallery__thumbs">
-        <div class="vd-gallery__thumb is-active" data-src="${hero}">
-          <img src="${hero}" alt="" loading="lazy" decoding="async"/>
-        </div>
-        <div class="vd-gallery__thumb" data-src="https://images.pexels.com/photos/${img2}/pexels-photo-${img2}.jpeg?auto=compress&cs=tinysrgb&w=1400">
-          <img src="https://images.pexels.com/photos/${img2}/pexels-photo-${img2}.jpeg?auto=compress&cs=tinysrgb&w=400" alt="" loading="lazy" decoding="async"/>
-        </div>
-        <div class="vd-gallery__thumb" data-src="https://images.pexels.com/photos/${img3}/pexels-photo-${img3}.jpeg?auto=compress&cs=tinysrgb&w=1400">
-          <img src="https://images.pexels.com/photos/${img3}/pexels-photo-${img3}.jpeg?auto=compress&cs=tinysrgb&w=400" alt="" loading="lazy" decoding="async"/>
-        </div>
-        <div class="vd-gallery__thumb" data-src="https://images.pexels.com/photos/${img4}/pexels-photo-${img4}.jpeg?auto=compress&cs=tinysrgb&w=1400">
-          <img src="https://images.pexels.com/photos/${img4}/pexels-photo-${img4}.jpeg?auto=compress&cs=tinysrgb&w=400" alt="" loading="lazy" decoding="async"/>
-        </div>
-      </div>
+      <c:if test="${not empty vehicle.imageUrl}">
+        <div class="vd-gallery__thumbs"><div class="vd-gallery__thumb is-active" data-src="${vehicle.imageUrl}"><img src="${vehicle.imageUrl}" alt="${vehicle.brand} ${vehicle.model}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/images/vehicles/default-vehicle.jpg'"/></div></div>
+      </c:if>
     </div>
 
     <div class="vd-title reveal">
@@ -437,12 +420,12 @@
             <span><i class="ti ti-users"></i> ${vehicle.extraField} seats</span>
           </c:when>
           <c:when test="${vehicle.vehicleType == 'Van'}">
-            <span><i class="ti ti-truck-loading"></i> ${vehicle.extraField} kg cargo</span>
+            <span><i class="ti ti-users"></i> ${vehicle.extraField} passenger seats</span>
           </c:when>
         </c:choose>
-        <span><i class="ti ti-gas-station"></i> Hybrid</span>
-        <span><i class="ti ti-settings"></i> Automatic</span>
-        <span><i class="ti ti-map-pin"></i> Kandy</span>
+        <span><i class="ti ti-gas-station"></i> ${vehicleRecord.fuelType}</span>
+        <span><i class="ti ti-settings"></i> ${vehicleRecord.transmission}</span>
+        <span><i class="ti ti-map-pin"></i> ${vehicleRecord.branchName}</span>
       </div>
     </div>
 
@@ -454,20 +437,20 @@
         <div><span class="vd-specs__lbl">Model</span><span class="vd-specs__val">${vehicle.model}</span></div>
         <div><span class="vd-specs__lbl">Year</span><span class="vd-specs__val">${vehicle.year}</span></div>
         <div><span class="vd-specs__lbl">Type</span><span class="vd-specs__val">${vehicle.vehicleType}</span></div>
-        <div><span class="vd-specs__lbl">Fuel</span><span class="vd-specs__val">Hybrid</span></div>
-        <div><span class="vd-specs__lbl">Transmission</span><span class="vd-specs__val">Automatic</span></div>
+        <div><span class="vd-specs__lbl">Fuel</span><span class="vd-specs__val">${vehicleRecord.fuelType}</span></div>
+        <div><span class="vd-specs__lbl">Transmission</span><span class="vd-specs__val">${vehicleRecord.transmission}</span></div>
         <c:choose>
           <c:when test="${vehicle.vehicleType == 'Car'}">
             <div><span class="vd-specs__lbl">Seats</span><span class="vd-specs__val">${vehicle.extraField}</span></div>
-            <div><span class="vd-specs__lbl">Mileage limit</span><span class="vd-specs__val">200 km / day</span></div>
+            <div><span class="vd-specs__lbl">Recorded mileage</span><span class="vd-specs__val">${vehicleRecord.mileage} km</span></div>
           </c:when>
           <c:when test="${vehicle.vehicleType == 'Van'}">
-            <div><span class="vd-specs__lbl">Cargo capacity</span><span class="vd-specs__val">${vehicle.extraField} kg</span></div>
-            <div><span class="vd-specs__lbl">Mileage limit</span><span class="vd-specs__val">250 km / day</span></div>
+            <div><span class="vd-specs__lbl">Passenger seats</span><span class="vd-specs__val">${vehicle.extraField}</span></div>
+            <div><span class="vd-specs__lbl">Recorded mileage</span><span class="vd-specs__val">${vehicleRecord.mileage} km</span></div>
           </c:when>
         </c:choose>
-        <div><span class="vd-specs__lbl">Pickup city</span><span class="vd-specs__val">Kandy &middot; Colombo</span></div>
-        <div><span class="vd-specs__lbl">Insurance</span><span class="vd-specs__val">Comprehensive</span></div>
+        <div><span class="vd-specs__lbl">Branch</span><span class="vd-specs__val">${vehicleRecord.branchName}</span></div>
+        <div><span class="vd-specs__lbl">Insurance expiry</span><span class="vd-specs__val">${not empty vehicleRecord.insuranceExpiry ? vehicleRecord.insuranceExpiry : 'Not recorded'}</span></div>
       </div>
     </section>
 

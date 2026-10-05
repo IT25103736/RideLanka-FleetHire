@@ -40,9 +40,4 @@ public abstract class User {
     public String getLicenseNo() { return licenseNo; }
     public void setLicenseNo(String licenseNo) { this.licenseNo = licenseNo == null ? "" : licenseNo; }
 
-    public abstract String getDashboardUrl();
-
-    public String toFileString() {
-        return id + "|" + name + "|" + email + "|" + password + "|" + role + "|" + createdDate;
-    }
-}
+    public abstract String getDashboardUrl();}

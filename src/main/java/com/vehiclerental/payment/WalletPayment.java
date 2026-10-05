@@ -33,10 +33,4 @@ public class WalletPayment extends Payment {
         }
     }
 
-    // Save to file — bookingId is appended last for backward-compat with legacy 9-field rows.
-    @Override
-    public String toFileString() {
-        return "WALLET|" + super.toFileString() + "|" + walletType + "|" + walletNumber + "|" + walletBalance
-                + "|" + getBookingId();
-    }
 }

@@ -8,7 +8,7 @@ public abstract class Vehicle {
     private int year;
     private double rentalPricePerDay;
     private boolean available;
-    private String imageUrl;   // full URL to a photo for this brand+model; empty falls back to a per-type stock image
+    private String imageUrl;   // verified URL for this exact vehicle; blank means no photo is displayed
 
     // ---- Constructor ----
     public Vehicle(String vehicleId, String brand, String model, int year,
@@ -29,8 +29,6 @@ public abstract class Vehicle {
     /** Home-page-tile label (Sedan / Hybrid / SUV / Hatchback / Electric / Van).
      *   and Van return their type; Car narrows further by model name + seat count. */
     public abstract String getDisplayCategory();
-
-    public abstract String toFileString();
 
     /** Convenience accessor used by the vehicle-form JSP to show whichever
      *  type-specific field this vehicle exposes (seats / cargo / cc). */

@@ -1,5 +1,5 @@
 /* ============================================================
-   VRMS — Boxcar Theme  (electric blue / navy / white)
+   RideLanka FleetHire — Boxcar Theme  (electric blue / navy / white)
    Visual tokens ported from boxcar-nextjs.vercel.app
    Anti-slop rules retained from taste-skill:
      · custom cubic-beziers (no linear/ease-in-out)
@@ -2478,7 +2478,7 @@ body { background: var(--bx-night); color: var(--bx-body); }
 .chauf-note em { font-style: normal; color: var(--bx-primary); font-weight: 500; }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   TESTIMONIALS — dynamic carousel rail reading from reviews.txt
+   TESTIMONIALS — dynamic carousel rail reading from MSSQL feedback
    ════════════════════════════════════════════════════════════════════════════ */
 .testi-rail {
   display: flex; gap: 18px;
@@ -2664,13 +2664,13 @@ body { background: var(--bx-night); color: var(--bx-body); }
   border-radius: 18px;
 }
 
-/* ── Text lockup beside the logo — VRMS large, subtext centered below ── */
+/* ── Text lockup beside the logo — RideLanka FleetHire large, subtext centered below ── */
 .mkt-brand__text,
 .sidebar-logo .logo-text,
 .mkt-foot__brand-text {
   display: flex;
   flex-direction: column;
-  align-items: center;      /* center the subtext under VRMS */
+  align-items: center;      /* center the subtext under RideLanka FleetHire */
   line-height: 1;
   position: relative;
 }

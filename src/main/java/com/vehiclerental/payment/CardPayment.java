@@ -37,13 +37,4 @@ public class CardPayment extends Payment
     {
         setStatus("Success");
         return "Card Payment processed successfully for " + getCustomerName();
-    }
-
-    // Save to file — bookingId is appended last for backward-compat with legacy 9-field rows.
-    @Override //this is like providing own implementation of that abstract method
-    public String toFileString()
-    {
-        return "CARD|" + super.toFileString() + "|" + cardNumber + "|" + cardHolderName + "|" + expiryDate
-                + "|" + getBookingId();
-    }
-}
+    }}

@@ -9,8 +9,7 @@ public class VerifiedRenterReview extends Review {
 
 
     public VerifiedRenterReview() {
-        super();
-        setReviewType("verified");
+        super("verified");
     }
 
     public VerifiedRenterReview(String reviewId, String vehicleId, String userId,
@@ -41,11 +40,4 @@ public class VerifiedRenterReview extends Review {
     public void   setBookingId(String bookingId)  { this.bookingId = bookingId; }
 
     public String getRentalDate() { return rentalDate; }
-    public void   setRentalDate(String rentalDate) { this.rentalDate = rentalDate; }
-
-
-    @Override
-    public String toFileString() {
-        return super.toFileString() + "|" + bookingId + "|" + rentalDate;
-    }
-}
+    public void   setRentalDate(String rentalDate) { this.rentalDate = rentalDate; }}

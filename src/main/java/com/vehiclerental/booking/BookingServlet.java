@@ -3,350 +3,153 @@ package com.vehiclerental.booking;
 import com.vehiclerental.model.User;
 import com.vehiclerental.model.Vehicle;
 import com.vehiclerental.notification.NotificationService;
-import com.vehiclerental.notification.WhatsAppChannel;
-import com.vehiclerental.util.VehicleFileHandler;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
+import com.vehiclerental.repository.BookingRepository;
+import com.vehiclerental.repository.VehicleRepository;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * C02 — Booking Servlet.
- * Routes:
- *   GET  /booking?action=list   → My Bookings
- *   GET  /booking?action=form   → New Booking form (optionally pre-fills ?vehicleId=&dailyRate=)
- *   POST /booking?action=create → save booking, forward to confirmation
- *   POST /booking?action=cancel → soft-delete (status=CANCELLED)
- */
-public class BookingServlet extends HttpServlet {
-
-    private static final Logger log = LoggerFactory.getLogger(BookingServlet.class);
-    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private final VehicleFileHandler vehicleHandler = new VehicleFileHandler();
-
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        String action = request.getParameter("action");
-        if (action == null) action = "list";
-
-        String userId = requireLoggedUserId(request, response);
-        if (userId == null) return;
-
-        switch (action) {
-            case "list":
-                renderMyBookings(userId, request, response);
-                break;
-            case "form":
-                renderForm(request, response);
-                break;
-            case "cancel":
-                cancel(request, response);
-                break;
-            default:
-                response.sendRedirect(request.getContextPath() + "/booking?action=list");
-        }
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        String action = request.getParameter("action");
-        if (action == null) action = "create";
-
-        String userId = requireLoggedUserId(request, response);
-        if (userId == null) return;
-
-        if ("cancel".equalsIgnoreCase(action)) {
-            cancel(request, response);
-            return;
-        }
-
-        // default action = create
-        create(userId, request, response);
-    }
-
-    /* ─────────────────────────  HANDLERS  ───────────────────────── */
-
-    private void renderMyBookings(String userId, HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        List<Booking> all = readAllSafe();
-
-        // OOP: load into linked list (demonstrates BookingLinkedList)
-        BookingLinkedList list = new BookingLinkedList();
-        for (Booking b : all) list.addBooking(b);
-
-        List<Booking> userAll       = new ArrayList<>();
-        List<Booking> active        = new ArrayList<>();
-        List<Booking> cancelled     = new ArrayList<>();
-        for (Booking b : all) {
-            if (!b.getUserId().equalsIgnoreCase(userId)) continue;
-            userAll.add(b);
-            if ("ACTIVE".equalsIgnoreCase(b.getStatus()))     active.add(b);
-            else if ("CANCELLED".equalsIgnoreCase(b.getStatus())) cancelled.add(b);
-        }
-
-        request.setAttribute("bookings",          userAll);
-        request.setAttribute("activeBookings",    active);
-        request.setAttribute("cancelledBookings", cancelled);
-        request.getRequestDispatcher("/WEB-INF/views/booking/myBookings.jsp")
-                .forward(request, response);
-    }
-
-    private void renderForm(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        // Optional pre-fill if coming from search results
-        String vehicleId = request.getParameter("vehicleId");
-        if (vehicleId != null && !vehicleId.isEmpty()) {
-            Vehicle v = vehicleHandler.getVehicleById(vehicleId);
-            if (v != null) {
-                request.setAttribute("selectedVehicle", v);
-                request.setAttribute("dailyRate",       v.getRentalPricePerDay());
-            }
-            request.setAttribute("vehicleId", vehicleId);
-        }
-
-        // Provide the full vehicle list + pickup option lists to the dropdowns
-        request.setAttribute("vehicleList",     vehicleHandler.getAllVehicles());
-        request.setAttribute("pickupLocations", PICKUP_LOCATIONS);
-        request.setAttribute("pickupTimes",     PICKUP_TIMES);
-        request.setAttribute("advanceLeadDays", ADVANCE_PAY_LEAD_DAYS);
-        request.getRequestDispatcher("/WEB-INF/views/booking/bookingForm.jsp")
-                .forward(request, response);
-    }
-
-    /** Fixed per-rental fees — wired to the price-breakdown box in bookingForm.jsp. */
-    public static final double DRIVER_FEE_PER_DAY = 4500.0;
-    public static final double INSURANCE_PER_DAY  = 1200.0;
-    public static final double DELIVERY_FEE       = 1500.0;
-    public static final double SECURITY_DEPOSIT   = 25_000.0;
-
-    /** Pick-up cities the operator services. */
-    public static final List<String> PICKUP_LOCATIONS = List.of("Colombo", "Kandy");
-
-    /** Pick-up time slots, hourly 09:00–21:00 inclusive (24h, "HH:00"). */
-    public static final List<String> PICKUP_TIMES = List.of(
-            "09:00", "10:00", "11:00", "12:00", "13:00", "14:00",
-            "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00");
-
-    /** Advance bookings must be paid (and therefore booked) at least this many days before start. */
+/** Booking & Reservation Management controller. All persistence is MSSQL-backed. */
+@Controller
+@RequestMapping("/booking")
+public class BookingServlet {
     public static final int ADVANCE_PAY_LEAD_DAYS = 7;
+    public static final List<String> PICKUP_LOCATIONS = List.of("Colombo", "Kandy");
+    public static final List<String> PICKUP_TIMES = List.of(
+            "09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00");
 
-    private void create(String userId, HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    private final BookingRepository bookings;
+    private final BookingService service;
+    private final VehicleRepository vehicles;
+    private final NotificationService notifications;
 
-        String vehicleId      = request.getParameter("vehicleId");
-        String startStr       = request.getParameter("startDate");
-        String durationStr    = request.getParameter("duration");
-        String dailyRateStr   = request.getParameter("dailyRate");
-        String withDriver     = request.getParameter("withDriver");
-        String acceptTerms    = request.getParameter("acceptTerms");
-        String pickupLocation = request.getParameter("pickupLocation");
-        String pickupTime     = request.getParameter("pickupTime");
+    public BookingServlet(BookingRepository bookings, BookingService service,
+                          VehicleRepository vehicles, NotificationService notifications) {
+        this.bookings=bookings; this.service=service; this.vehicles=vehicles; this.notifications=notifications;
+    }
 
-        if (vehicleId == null || startStr == null || durationStr == null) {
-            forwardFormWithError("Missing required fields.", request, response);
-            return;
-        }
-        if (!"true".equalsIgnoreCase(acceptTerms) && !"on".equalsIgnoreCase(acceptTerms)) {
-            forwardFormWithError("You must accept the rental policies before booking.",
-                    request, response);
-            return;
-        }
-        if (pickupLocation == null || !PICKUP_LOCATIONS.contains(pickupLocation)) {
-            forwardFormWithError("Please pick a pick-up location (Colombo or Kandy).",
-                    request, response);
-            return;
-        }
-        if (pickupTime == null || !PICKUP_TIMES.contains(pickupTime)) {
-            forwardFormWithError("Please pick a pick-up time between 9:00 AM and 9:00 PM.",
-                    request, response);
-            return;
-        }
-
-        int    duration  = parseInt(durationStr, 1);
-        double dailyRate = parseDouble(dailyRateStr, 0);
-
-        LocalDate start;
-        try { start = LocalDate.parse(startStr, FMT); }
-        catch (Exception ex) {
-            forwardFormWithError("Invalid start date.", request, response);
-            return;
-        }
-        LocalDate end = start.plusDays(Math.max(1, duration));
-
-        String bookingId = "B" + System.currentTimeMillis();
-        boolean driverChecked = "true".equalsIgnoreCase(withDriver) || "on".equalsIgnoreCase(withDriver);
-
-        LocalDate     today = LocalDate.now();
-        LocalDateTime now   = LocalDateTime.now();
-
-        // CLASSIFY — pure routing, no failure mode.
-        Booking booking = Booking.classify(bookingId, userId, vehicleId, start, end, today);
-        booking.setWithDriver(driverChecked);
-        booking.setPickupLocation(pickupLocation);
-        booking.setPickupTime(pickupTime);
-        booking.setCustomerPhone(request.getParameter("phone"));
-
-        long daysAhead = java.time.temporal.ChronoUnit.DAYS.between(today, start);
-        log.info("Booking {} classified as {} (daysAhead={}, start={}, today={})",
-                 bookingId, booking.getBookingType(), daysAhead, start, today);
-
-        // TYPE-SPECIFIC RULES — polymorphic. Subclass owns its own constraints.
-        String ruleError = booking.validateBookingRules(now);
-        if (ruleError != null) {
-            log.warn("Booking {} rejected by {} rule: {} (daysAhead={}, duration={}, pickup={})",
-                     bookingId, booking.getBookingType(), ruleError, daysAhead, duration, pickupTime);
-            forwardFormWithError(ruleError, request, response);
-            return;
-        }
-
-        // GENERIC DATE/OVERLAP — unchanged DateValidator call.
-        List<Booking> existing = readAllSafe();
-        String dateError = DateValidator.validate(start.toString(), end.toString(), existing, vehicleId);
-        if (dateError != null) {
-            log.warn("Booking {} rejected by date validator: {}", bookingId, dateError);
-            forwardFormWithError(dateError, request, response);
-            return;
-        }
-
-        try { BookingFileHandler.saveBooking(booking); }
-        catch (IOException ex) {
-            forwardFormWithError("Could not save booking: " + ex.getMessage(), request, response);
-            return;
-        }
-
-        // ── Polymorphic cost (tiered Instant / flat Advance) + fixed fees ──
-        // Computed BEFORE notification fan-out so the WhatsApp message can include
-        // the total — otherwise the customer's confirmation has no price line.
-        double baseCost  = booking.calculateBaseCost(dailyRate, duration, today);
-        double driverFee = driverChecked ? DRIVER_FEE_PER_DAY * duration : 0;
-        double insurance = INSURANCE_PER_DAY * duration;
-        double delivery  = DELIVERY_FEE;
-        double totalCost = baseCost + driverFee + insurance + delivery;
-
-        // ── Notifications + WhatsApp click-to-chat (post-save, never blocks booking) ──
+    @GetMapping
+    public String get(@RequestParam(defaultValue="list") String action,
+                      @RequestParam(required=false) String vehicleId,
+                      @RequestParam(required=false) String bookingId,
+                      HttpSession session, Model model) {
+        User user = currentCustomer(session); if (user == null) return "redirect:/login";
         try {
-            HttpSession session = request.getSession(false);
-            User user = (session != null && session.getAttribute("loggedUser") instanceof User u) ? u : null;
-            Vehicle vehicle = vehicleHandler.getVehicleById(vehicleId);
-            String customerPhone = request.getParameter("phone");
-            String baseUrl = request.getScheme() + "://" + request.getServerName()
-                           + (request.getServerPort() == 80 || request.getServerPort() == 443
-                              ? "" : (":" + request.getServerPort()));
-            NotificationService.get().bookingConfirmed(booking, user, vehicle,
-                    customerPhone, totalCost, request.getContextPath(), baseUrl);
-            // Expose the wa.me URL so bookingConfirmation.jsp can render an "Open WhatsApp" button.
-            request.setAttribute("whatsappUrl", WhatsAppChannel.getLastBuiltUrl());
-        } catch (RuntimeException notifyEx) {
-            // A failed notification must NEVER break the booking response.
-            log.warn("Notification fan-out failed for booking {}: {}",
-                    bookingId, notifyEx.getMessage());
-        }
-
-        // Log applied surcharge tier (Advance returns 0 → no log line).
-        double pct = booking.getAppliedSurcharge(today);
-        if (pct > 0) {
-            double raw = Math.max(1, duration) * dailyRate;
-            log.info("Booking {} surcharge applied: tier={}%, raw={}, surchargeAmount={}, total={}",
-                     bookingId, (int)(pct * 100), raw, baseCost - raw, totalCost);
-        }
-        request.setAttribute("appliedSurcharge", pct);  // for confirmation JSP
-
-        String customerName = request.getParameter("customerName");
-
-        // Polymorphic post-create routing — Instant pays now, Advance previews.
-        if (booking.requiresImmediatePayment()) {
-            response.sendRedirect(request.getContextPath()
-                    + "/payment/checkout?bookingId=" + bookingId
-                    + "&amount=" + totalCost
-                    + "&customerName=" + java.net.URLEncoder.encode(
-                            customerName == null ? "" : customerName,
-                            java.nio.charset.StandardCharsets.UTF_8));
-            return;
-        }
-
-        request.setAttribute("booking",      booking);
-        request.setAttribute("customerName", customerName);
-        request.setAttribute("totalCost",    totalCost);
-        request.setAttribute("baseCost",     baseCost);
-        request.setAttribute("driverFee",    driverFee);
-        request.setAttribute("insurance",    insurance);
-        request.setAttribute("delivery",     delivery);
-        request.setAttribute("deposit",      SECURITY_DEPOSIT);
-        request.setAttribute("duration",     duration);
-        request.setAttribute("dailyRate",    dailyRate);
-        request.setAttribute("withDriver",   driverChecked);
-        request.getRequestDispatcher("/WEB-INF/views/booking/bookingConfirmation.jsp")
-                .forward(request, response);
-    }
-
-    private void cancel(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String bookingId = request.getParameter("bookingId");
-        if (bookingId != null && !bookingId.isEmpty()) {
-            try { BookingFileHandler.updateBookingStatus(bookingId, "CANCELLED"); }
-            catch (IOException ignored) {}
-
-            // Notify the user + admins. Wrapped — a notification failure cannot
-            // break the redirect back to "My Bookings".
-            try {
-                HttpSession session = request.getSession(false);
-                User user = (session != null && session.getAttribute("loggedUser") instanceof User u) ? u : null;
-                if (user != null) {
-                    NotificationService.get().bookingCancelled(bookingId, user);
-                }
-            } catch (RuntimeException notifyEx) {
-                log.warn("Cancel notification failed for booking {}: {}",
-                        bookingId, notifyEx.getMessage());
+            if ("form".equalsIgnoreCase(action)) { prepareForm(model, vehicleId, null); return "booking/bookingForm"; }
+            if ("edit".equalsIgnoreCase(action)) {
+                Booking b = bookings.findById(bookingId);
+                if (b == null || !user.getId().equalsIgnoreCase(b.getUserId()) || !"PENDING".equalsIgnoreCase(b.getStatus()))
+                    return "redirect:/booking?action=list&error=" + enc("Only your unpaid pending bookings can be edited.");
+                prepareForm(model, b.getVehicleId(), b); model.addAttribute("editMode", true); model.addAttribute("editBooking", b);
+                long duration = java.time.temporal.ChronoUnit.DAYS.between(LocalDate.parse(b.getStartDate()), LocalDate.parse(b.getEndDate()));
+                model.addAttribute("editDuration", Math.max(1,duration)); return "booking/bookingForm";
             }
+            renderList(user, model); return "booking/myBookings";
+        } catch (Exception ex) {
+            model.addAttribute("errorMsg", "Unable to load booking information from the database.");
+            return "booking/myBookings";
         }
-        response.sendRedirect(request.getContextPath() + "/booking?action=list");
     }
 
-    /* ─────────────────────────  HELPERS  ───────────────────────── */
+    @PostMapping
+    public String post(@RequestParam(defaultValue="create") String action,
+                       @RequestParam(required=false) String bookingId,
+                       @RequestParam(required=false) String vehicleId,
+                       @RequestParam(required=false) String startDate,
+                       @RequestParam(required=false) String duration,
+                       @RequestParam(required=false) String pickupLocation,
+                       @RequestParam(required=false) String pickupTime,
+                       @RequestParam(required=false, defaultValue="") String phone,
+                       @RequestParam(required=false) String withDriver,
+                       @RequestParam(required=false) String acceptTerms,
+                       @RequestParam(required=false, defaultValue="Customer cancellation") String reason,
+                       HttpSession session, HttpServletRequest request, Model model) {
+        User user = currentCustomer(session); if (user == null) return "redirect:/login";
+        try {
+            if ("cancel".equalsIgnoreCase(action)) {
+                if (bookingId == null || bookingId.isBlank()) return "redirect:/booking?action=list";
+                boolean ok = service.cancel(bookingId, user.getId(), reason);
+                if (ok) notifications.bookingCancelled(bookingId,user);
+                return "redirect:/booking?action=list&" + (ok?"msg=cancelled":"error="+enc("Booking cannot be cancelled in its current state."));
+            }
 
-    private void forwardFormWithError(String msg, HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        request.setAttribute("errorMsg", msg);
-        request.setAttribute("vehicleList",     vehicleHandler.getAllVehicles());
-        request.setAttribute("pickupLocations", PICKUP_LOCATIONS);
-        request.setAttribute("pickupTimes",     PICKUP_TIMES);
-        request.setAttribute("advanceLeadDays", ADVANCE_PAY_LEAD_DAYS);
-        request.getRequestDispatcher("/WEB-INF/views/booking/bookingForm.jsp")
-                .forward(request, response);
+            validateFormBasics(vehicleId,startDate,duration,pickupLocation,pickupTime,phone);
+            boolean driver = "true".equalsIgnoreCase(withDriver) || "on".equalsIgnoreCase(withDriver);
+            LocalDate start = LocalDate.parse(startDate);
+            int days = Integer.parseInt(duration);
+
+            if ("update".equalsIgnoreCase(action)) {
+                BookingService.CreatedBooking updated = service.updatePending(bookingId,user.getId(),start,days,driver,pickupLocation,pickupTime,phone);
+                return "redirect:/booking?action=list&msg=updated";
+            }
+
+            if (!("true".equalsIgnoreCase(acceptTerms) || "on".equalsIgnoreCase(acceptTerms)))
+                throw new IllegalArgumentException("You must accept the rental policies before booking.");
+
+            BookingService.CreatedBooking created = service.create(user.getId(),vehicleId,start,days,driver,pickupLocation,pickupTime,phone);
+            Vehicle domainVehicle = vehicles.findDomainById(vehicleId);
+            String baseUrl=request.getScheme()+"://"+request.getServerName()+((request.getServerPort()==80||request.getServerPort()==443)?"":":"+request.getServerPort());
+            String waUrl = notifications.bookingCreated(created.booking(), user, domainVehicle, phone,
+                    created.price().totalAmount(), request.getContextPath(), baseUrl);
+
+            if (created.booking().requiresImmediatePayment())
+                return "redirect:/payment/checkout?bookingId=" + enc(created.booking().getBookingId());
+
+            populateConfirmation(model,created,user.getName(),waUrl,phone);
+            return "booking/bookingConfirmation";
+        } catch (IllegalArgumentException ex) {
+            try { prepareForm(model, vehicleId, null); } catch (SQLException ignored) {}
+            model.addAttribute("errorMsg", ex.getMessage());
+            model.addAttribute("formStartDate",startDate); model.addAttribute("formDuration",duration);
+            model.addAttribute("formPickupLocation",pickupLocation); model.addAttribute("formPickupTime",pickupTime); model.addAttribute("formPhone",phone); model.addAttribute("formWithDriver", "true".equalsIgnoreCase(withDriver) || "on".equalsIgnoreCase(withDriver));
+            if ("update".equalsIgnoreCase(action)) { model.addAttribute("editMode",true); model.addAttribute("editBookingId",bookingId); }
+            return "booking/bookingForm";
+        } catch (Exception ex) {
+            try { prepareForm(model, vehicleId, null); } catch (SQLException ignored) {}
+            model.addAttribute("errorMsg", "Unable to save the booking. Please try again.");
+            return "booking/bookingForm";
+        }
     }
 
-    private List<Booking> readAllSafe() {
-        try { return BookingFileHandler.readAllBookings(); }
-        catch (IOException e) { return new ArrayList<>(); }
+    private void renderList(User user, Model model) throws SQLException {
+        List<Booking> all = bookings.findByUserId(user.getId());
+        List<Booking> current=new ArrayList<>(), cancelled=new ArrayList<>();
+        for(Booking b:all){if("CANCELLED".equalsIgnoreCase(b.getStatus()))cancelled.add(b);else current.add(b);}
+        model.addAttribute("bookings",all); model.addAttribute("activeBookings",current); model.addAttribute("cancelledBookings",cancelled);
     }
 
-    /**
-     * Pull the logged-in user's ID from session; redirect to /login when missing.
-     * Returns null if redirected.
-     */
-    private String requireLoggedUserId(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        HttpSession session = request.getSession(false);
-        Object logged = session == null ? null : session.getAttribute("loggedUser");
-        if (logged instanceof User u) return u.getId();
-        response.sendRedirect(request.getContextPath() + "/login");
-        return null;
+    private void prepareForm(Model model,String selectedVehicleId,Booking existing)throws SQLException{
+        model.addAttribute("vehicleList",vehicles.findAllDomain()); model.addAttribute("pickupLocations",PICKUP_LOCATIONS);
+        model.addAttribute("pickupTimes",PICKUP_TIMES); model.addAttribute("advanceLeadDays",ADVANCE_PAY_LEAD_DAYS); model.addAttribute("vehicleId",selectedVehicleId);
+        if(selectedVehicleId!=null){Vehicle v=vehicles.findDomainById(selectedVehicleId);if(v!=null){model.addAttribute("selectedVehicle",v);model.addAttribute("dailyRate",v.getRentalPricePerDay());}}
+        if(existing!=null) model.addAttribute("editBooking",existing);
     }
 
-    private static int    parseInt(String s, int def)    { try { return Integer.parseInt(s); } catch (Exception e) { return def; } }
-    private static double parseDouble(String s, double d){ try { return Double.parseDouble(s); } catch (Exception e) { return d; } }
+    private static void validateFormBasics(String vehicleId,String startDate,String duration,String location,String time,String phone){
+        if(vehicleId==null||vehicleId.isBlank())throw new IllegalArgumentException("Please select a vehicle.");
+        try{LocalDate.parse(startDate);}catch(Exception e){throw new IllegalArgumentException("Please enter a valid pickup date.");}
+        try{int d=Integer.parseInt(duration);if(d<1||d>90)throw new Exception();}catch(Exception e){throw new IllegalArgumentException("Rental duration must be between 1 and 90 days.");}
+        if(!PICKUP_LOCATIONS.contains(location))throw new IllegalArgumentException("Please select a supported pickup location.");
+        if(!PICKUP_TIMES.contains(time))throw new IllegalArgumentException("Please select a valid pickup time.");
+        if(phone!=null&&!phone.isBlank()&&!phone.matches("^(?:\\+94|94|0)?7\\d{8}$"))throw new IllegalArgumentException("Enter a valid Sri Lankan mobile number.");
+    }
+
+    private static void populateConfirmation(Model m,BookingService.CreatedBooking c,String name,String wa,String phone){
+        BookingService.Price p=c.price(); m.addAttribute("booking",c.booking());m.addAttribute("customerName",name);m.addAttribute("totalCost",p.totalAmount());
+        m.addAttribute("baseCost",p.rentalCost());m.addAttribute("driverFee",p.driverCharge());m.addAttribute("insurance",p.insurance());m.addAttribute("delivery",p.delivery());
+        m.addAttribute("deposit",BookingService.SECURITY_DEPOSIT);m.addAttribute("duration",c.duration());m.addAttribute("dailyRate",p.dailyRate());m.addAttribute("withDriver",c.booking().isWithDriver());
+        m.addAttribute("appliedSurcharge",p.surchargeRate());m.addAttribute("whatsappUrl",wa);m.addAttribute("phone",phone);
+    }
+
+    private static User currentCustomer(HttpSession s){Object x=s==null?null:s.getAttribute("loggedUser");if(!(x instanceof User u))return null;return "CUSTOMER".equalsIgnoreCase(u.getRole())?u:null;}
+    private static String enc(String s){return URLEncoder.encode(s==null?"":s, StandardCharsets.UTF_8);}
 }

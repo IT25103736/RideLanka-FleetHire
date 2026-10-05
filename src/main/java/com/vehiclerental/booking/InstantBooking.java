@@ -106,16 +106,4 @@ public class InstantBooking extends Booking {
         if (daysAhead == 0)  return SAME_DAY_SURCHARGE;
         if (daysAhead <= 3)  return WITHIN_3_DAYS_SURCHARGE;
         return STANDARD_INSTANT_SURCHARGE;  // daysAhead 4..6
-    }
-
-    /**
-     * Row layout: ...|status|INSTANT|withDriver|pickupLocation|pickupTime|customerPhone
-     * Append-only — phone was added last so legacy 10-field rows still parse.
-     */
-    @Override
-    public String toFileString() {
-        return super.toFileString() + "|" + isWithDriver()
-                + "|" + getPickupLocation() + "|" + getPickupTime()
-                + "|" + getCustomerPhone();
-    }
-}
+    }}

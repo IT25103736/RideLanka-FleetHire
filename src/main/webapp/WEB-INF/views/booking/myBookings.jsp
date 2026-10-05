@@ -112,6 +112,14 @@
     background: rgba(248,113,113,0.18);
     border-color: rgba(248,113,113,0.40);
   }
+  .mb-actions { display:inline-flex; align-items:center; justify-content:flex-end; gap:6px; flex-wrap:wrap; }
+  .mb-action {
+    display:inline-flex; align-items:center; gap:6px; padding:6px 10px;
+    border-radius:var(--r-md); font-size:12px; font-weight:600; text-decoration:none;
+    border:1px solid var(--glass-border); color:rgba(255,255,255,0.82); background:rgba(255,255,255,0.04);
+  }
+  .mb-action:hover { border-color:rgba(111,203,163,0.34); color:var(--bx-primary); }
+  .mb-action--pay { background:rgba(111,203,163,0.12); border-color:rgba(111,203,163,0.30); color:var(--bx-primary); }
 
   /* Cancelled section header */
   .mb-section-row td {
@@ -267,30 +275,27 @@
                 </td>
                 <td>
                   <c:choose>
-                    <c:when test="${b.status == 'ACTIVE'}">
-                      <span class="mb-badge mb-badge--st-active">Active</span>
-                    </c:when>
-                    <c:when test="${b.status == 'COMPLETED'}">
-                      <span class="mb-badge mb-badge--st-completed">Completed</span>
-                    </c:when>
-                    <c:otherwise>
-                      <span class="mb-badge mb-badge--st-active">${b.status}</span>
-                    </c:otherwise>
+                    <c:when test="${b.status == 'PENDING'}"><span class="mb-badge mb-badge--type-advance">Pending payment</span></c:when>
+                    <c:when test="${b.status == 'CONFIRMED'}"><span class="mb-badge mb-badge--st-active">Confirmed</span></c:when>
+                    <c:when test="${b.status == 'ACTIVE'}"><span class="mb-badge mb-badge--st-active">Active rental</span></c:when>
+                    <c:when test="${b.status == 'COMPLETED'}"><span class="mb-badge mb-badge--st-completed">Completed</span></c:when>
+                    <c:otherwise><span class="mb-badge mb-badge--st-active">${b.status}</span></c:otherwise>
                   </c:choose>
                 </td>
                 <td style="text-align:right;">
-                  <c:if test="${b.status == 'ACTIVE'}">
-                    <form action="${pageContext.request.contextPath}/booking" method="post"
-                          style="display:inline;"
-                          onsubmit="return confirm('Cancel booking ${b.bookingId}?');">
-                      <input type="hidden" name="action"    value="cancel"/>
-                      <input type="hidden" name="bookingId" value="${b.bookingId}"/>
-                      <input type="hidden" name="userId"    value="${b.userId}"/>
-                      <button type="submit" class="mb-cancel">
-                        <i class="ti ti-x"></i> Cancel
-                      </button>
-                    </form>
-                  </c:if>
+                  <span class="mb-actions">
+                    <c:if test="${b.status == 'PENDING'}">
+                      <a class="mb-action" href="${pageContext.request.contextPath}/booking?action=edit&amp;bookingId=${b.bookingId}"><i class="ti ti-edit"></i> Edit</a>
+                      <a class="mb-action mb-action--pay" href="${pageContext.request.contextPath}/payment/checkout?bookingId=${b.bookingId}"><i class="ti ti-credit-card"></i> Pay</a>
+                    </c:if>
+                    <c:if test="${b.status == 'PENDING' or b.status == 'CONFIRMED'}">
+                      <form action="${pageContext.request.contextPath}/booking" method="post" style="display:inline;" onsubmit="return confirm('Cancel booking ${b.bookingId}?');">
+                        <input type="hidden" name="action" value="cancel"/>
+                        <input type="hidden" name="bookingId" value="${b.bookingId}"/>
+                        <button type="submit" class="mb-cancel"><i class="ti ti-x"></i> Cancel</button>
+                      </form>
+                    </c:if>
+                  </span>
                 </td>
               </tr>
             </c:if>

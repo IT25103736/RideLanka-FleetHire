@@ -173,9 +173,9 @@
   <form method="get" action="${pageContext.request.contextPath}/review/view">
     <div class="vr-filter__search">
       <i class="ti ti-search"></i>
-      <input type="text" name="search" placeholder="Search reviews..." value="${param.search}"/>
+      <input type="text" name="search" maxlength="150" placeholder="Search reviews..." value="${param.search}"/>
     </div>
-    <input type="text" name="vehicleId" placeholder="Vehicle ID" value="${param.vehicleId}"/>
+    <input type="text" name="vehicleId" maxlength="20" placeholder="Vehicle ID" value="${param.vehicleId}"/>
     <select name="rating">
       <option value="">All ratings</option>
       <option value="5" ${param.rating == '5' ? 'selected':''}>★★★★★ 5 only</option>

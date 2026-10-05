@@ -7,8 +7,7 @@ public class PublicReview extends Review {
     private String nickname;
 
     public PublicReview() {
-        super();
-        setReviewType("public");
+        super("public");
     }
 
     public PublicReview(String reviewId, String vehicleId, String userId,
@@ -33,11 +32,4 @@ public class PublicReview extends Review {
 
 
     public String getNickname() { return nickname; }
-    public void   setNickname(String nickname) { this.nickname = nickname; }
-
-
-    @Override
-    public String toFileString() {
-        return super.toFileString() + "|" + (nickname != null ? nickname : "");
-    }
-}
+    public void   setNickname(String nickname) { this.nickname = nickname; }}

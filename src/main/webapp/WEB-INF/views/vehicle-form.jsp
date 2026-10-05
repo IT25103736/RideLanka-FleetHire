@@ -13,22 +13,37 @@
 <div class="vm-note"><strong>Separation rule:</strong> this screen creates and edits vehicle identity/specification data. Use <strong>Fleet &amp; Maintenance</strong> to mark a vehicle as Maintenance, Reserved, Rented or Out of Service.</div>
 <c:set var="id" value="${not empty formVehicleId ? formVehicleId : (not empty vehicle ? vehicle.vehicleId : '')}"/><c:set var="type" value="${not empty formVehicleType ? formVehicleType : (not empty vehicle ? vehicle.vehicleType : 'Car')}"/><c:set var="plate" value="${not empty formPlateNo ? formPlateNo : (not empty vehicle ? vehicle.plateNo : '')}"/><c:set var="make" value="${not empty formMake ? formMake : (not empty vehicle ? vehicle.make : '')}"/><c:set var="vmodel" value="${not empty formModel ? formModel : (not empty vehicle ? vehicle.model : '')}"/><c:set var="year" value="${not empty formYear ? formYear : (not empty vehicle ? vehicle.vehicleYear : '')}"/><c:set var="trans" value="${not empty formTransmission ? formTransmission : (not empty vehicle ? vehicle.transmission : 'AUTOMATIC')}"/><c:set var="fuel" value="${not empty formFuel ? formFuel : (not empty vehicle ? vehicle.fuelType : 'PETROL')}"/><c:set var="seats" value="${not empty formSeats ? formSeats : (not empty vehicle ? vehicle.seats : '5')}"/><c:set var="mileage" value="${not empty formMileage ? formMileage : (not empty vehicle ? vehicle.mileage : '0')}"/><c:set var="rate" value="${not empty formRate ? formRate : (not empty vehicle ? vehicle.dailyRate : '')}"/><c:set var="cat" value="${not empty formCategory ? formCategory : (not empty vehicle ? vehicle.categoryId : '')}"/><c:set var="branch" value="${not empty formBranch ? formBranch : (not empty vehicle ? vehicle.branchId : '')}"/><c:set var="image" value="${not empty formImage ? formImage : (not empty vehicle ? vehicle.imageUrl : '')}"/><c:set var="reg" value="${not empty formReg ? formReg : (not empty vehicle ? vehicle.registrationExpiry : '')}"/><c:set var="ins" value="${not empty formIns ? formIns : (not empty vehicle ? vehicle.insuranceExpiry : '')}"/><c:set var="permit" value="${not empty formPermit ? formPermit : (not empty vehicle ? vehicle.permitExpiry : '')}"/>
 <div class="vm-card reveal"><form action="${pageContext.request.contextPath}/vehicle" method="post"><input type="hidden" name="action" value="${not empty formAction ? formAction : (isEdit?'edit':'add')}"/><div class="vm-grid">
-<div class="vm-f"><label>Vehicle ID *</label><input name="vehicleId" value="${id}" ${isEdit?'readonly':''} required placeholder="V040"/></div>
-<div class="vm-f"><label>Vehicle type *</label><select name="vehicleType"><option value="Car" selected>Car</option></select></div>
-<div class="vm-f"><label>Plate number *</label><input name="plateNo" value="${plate}" required placeholder="CBA-2040"/></div>
-<div class="vm-f"><label>Make *</label><input name="make" value="${make}" required placeholder="Toyota"/></div>
-<div class="vm-f"><label>Model *</label><input name="model" value="${vmodel}" required placeholder="Corolla"/></div>
-<div class="vm-f"><label>Year *</label><input type="number" name="vehicleYear" value="${year}" min="1980" max="2100" required/></div>
-<div class="vm-f"><label>Transmission *</label><select name="transmission"><option value="AUTOMATIC" ${trans=='AUTOMATIC'?'selected':''}>Automatic</option><option value="MANUAL" ${trans=='MANUAL'?'selected':''}>Manual</option></select></div>
-<div class="vm-f"><label>Fuel type *</label><select name="fuelType"><option value="PETROL" ${fuel=='PETROL'?'selected':''}>Petrol</option><option value="DIESEL" ${fuel=='DIESEL'?'selected':''}>Diesel</option><option value="HYBRID" ${fuel=='HYBRID'?'selected':''}>Hybrid</option><option value="ELECTRIC" ${fuel=='ELECTRIC'?'selected':''}>Electric</option></select></div>
+<div class="vm-f"><label>Vehicle ID *</label><input name="vehicleId" value="${id}" ${isEdit?'readonly':''} required minlength="2" maxlength="20" pattern="[A-Za-z0-9-]{2,20}" placeholder="V040"/></div>
+<div class="vm-f"><label>Vehicle type *</label><select name="vehicleType" required><option value="Car" ${type=='Car'?'selected':''}>Car</option><option value="Van" ${type=='Van'?'selected':''}>Van</option></select></div>
+<div class="vm-f"><label>Plate number *</label><input name="plateNo" value="${plate}" required minlength="3" maxlength="30" pattern="[A-Za-z0-9-]{3,30}" placeholder="CBA-2040"/></div>
+<div class="vm-f"><label>Make *</label><input name="make" value="${make}" required maxlength="60" placeholder="Toyota"/></div>
+<div class="vm-f"><label>Model *</label><input name="model" value="${vmodel}" required maxlength="80" placeholder="Corolla"/></div>
+<div class="vm-f"><label>Year *</label><input type="number" name="vehicleYear" value="${year}" min="1980" id="vehicleYear" max="2100" required/></div>
+<div class="vm-f"><label>Transmission *</label><select name="transmission" required><option value="AUTOMATIC" ${trans=='AUTOMATIC'?'selected':''}>Automatic</option><option value="MANUAL" ${trans=='MANUAL'?'selected':''}>Manual</option></select></div>
+<div class="vm-f"><label>Fuel type *</label><select name="fuelType" required><option value="PETROL" ${fuel=='PETROL'?'selected':''}>Petrol</option><option value="DIESEL" ${fuel=='DIESEL'?'selected':''}>Diesel</option><option value="HYBRID" ${fuel=='HYBRID'?'selected':''}>Hybrid</option><option value="ELECTRIC" ${fuel=='ELECTRIC'?'selected':''}>Electric</option></select></div>
 <div class="vm-f"><label>Seats *</label><input type="number" name="seats" value="${seats}" min="1" max="20" required/></div>
-<div class="vm-f"><label>Mileage (km)</label><input type="number" name="mileage" value="${mileage}" min="0"/></div>
-<div class="vm-f"><label>Daily rate (LKR) *</label><input type="number" name="dailyRate" value="${rate}" min="0" step="100" required/></div>
+<div class="vm-f"><label>Mileage (km)</label><input type="number" name="mileage" value="${mileage}" min="0" max="999999999" required/></div>
+<div class="vm-f"><label>Daily rate (LKR) *</label><input
+                                                           type="number"
+                                                           id="dailyRate"
+                                                           name="dailyRate"
+                                                           min="0"
+                                                           max="1000000"
+                                                           step="100"
+                                                           value="${rate}"
+                                                           placeholder="e.g. 8000"
+                                                           required></div>
 <div class="vm-f"><label>Category *</label><select name="categoryId" required><option value="">Select category</option><c:forEach var="c" items="${categories}"><option value="${c[0]}" ${cat==c[0]?'selected':''}>${c[1]}</option></c:forEach></select></div>
 <div class="vm-f"><label>Branch *</label><select name="branchId" required><option value="">Select branch</option><c:forEach var="b" items="${branches}"><option value="${b[0]}" ${branch==b[0]?'selected':''}>${b[1]}</option></c:forEach></select></div>
-<div class="vm-f vm-full"><label>Image URL</label><input type="url" name="imageUrl" value="${image}" placeholder="https://..."/></div>
+<div class="vm-f vm-full"><label>Image path / URL *</label><input type="text" name="imageUrl" value="${image}" maxlength="500" required placeholder="/images/vehicles/toyota-corolla.jpg"/><small style="color:rgba(255,255,255,.45)">Use a packaged path under /images/vehicles/ or an http(s) URL.</small></div>
 <div class="vm-f"><label>Registration expiry</label><input type="date" name="registrationExpiry" value="${reg}"/></div>
 <div class="vm-f"><label>Insurance expiry</label><input type="date" name="insuranceExpiry" value="${ins}"/></div>
 <div class="vm-f"><label>Permit expiry</label><input type="date" name="permitExpiry" value="${permit}"/></div>
 </div><div class="vm-actions"><a href="${pageContext.request.contextPath}/vehicle?action=list" class="btn btn-ghost">Cancel</a><button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> ${isEdit?'Save changes':'Add vehicle'}</button></div></form></div>
+<script>
+document.addEventListener("DOMContentLoaded",function(){
+  const y=document.getElementById("vehicleYear");
+  if(y){y.max=String(new Date().getFullYear()+1);}
+});
+</script>
 <%@ include file="/WEB-INF/views/common/footer.jsp" %>

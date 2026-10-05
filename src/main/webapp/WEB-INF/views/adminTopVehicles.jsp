@@ -101,7 +101,7 @@
           <td>
             <a href="${pageContext.request.contextPath}/vehicle?action=view&id=${r.vehicle.vehicleId}"
                style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:12px;">
-              <img class="tv-thumb" src="${not empty r.vehicle.imageUrl ? r.vehicle.imageUrl : ''}" alt="" loading="lazy" decoding="async"/>
+              <img class="tv-thumb" src="${not empty r.vehicle.imageUrl ? r.vehicle.imageUrl : ''}" alt="" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/images/vehicles/default-vehicle.jpg'"/>
               <div>
                 <div style="font-weight:600; color:#fff;">${r.vehicle.brand} ${r.vehicle.model}</div>
                 <div class="mp-mono" style="font-size:11px; color:rgba(255,255,255,0.5);">${r.vehicle.vehicleId}</div>

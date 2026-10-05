@@ -5,11 +5,11 @@
     <div class="mkt-foot__inner">
 
       <a href="${pageContext.request.contextPath}/" class="mkt-foot__brand"
-         style="text-decoration:none; color:inherit;" aria-label="VRMS home">
+         style="text-decoration:none; color:inherit;" aria-label="RideLanka FleetHire home">
         <img src="${pageContext.request.contextPath}/images/vrms-logo.png"
-             alt="VRMS — Vehicle Rental" class="mkt-foot__brand-img"/>
+             alt="RideLanka FleetHire — Vehicle Rental" class="mkt-foot__brand-img"/>
         <div class="mkt-foot__brand-text">
-          <span class="brand">VRMS</span>
+          <span class="brand">RideLanka FleetHire</span>
           <small>&mdash; Vehicle Rental &mdash;</small>
         </div>
       </a>
@@ -86,7 +86,7 @@
       </div>
 
       <div class="mkt-foot__bar">
-        <span>© 2026 VRMS — Vehicle Rental Management System. All rights reserved.</span>
+        <span>© 2026 RideLanka FleetHire — RideLanka FleetHire. All rights reserved.</span>
         <div>
           <a href="${pageContext.request.contextPath}/policies">Rental Policies</a>
           <a href="#">Terms &amp; Conditions</a>

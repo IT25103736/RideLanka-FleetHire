@@ -24,7 +24,7 @@ public abstract class Booking {
         this.vehicleId = vehicleId;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.status = "ACTIVE"; // every new booking starts as ACTIVE
+        this.status = "PENDING"; // database lifecycle begins as PENDING until payment/approval
         this.withDriver = false;
         this.pickupLocation = "";
         this.pickupTime = "";
@@ -121,13 +121,6 @@ public abstract class Booking {
      * the post-create redirect target.
      */
     public abstract boolean requiresImmediatePayment();
-
-    // Converts this booking to one line for saving to bookings.txt (pipe-delimited)
-    public String toFileString() {
-        return bookingId + "|" + userId + "|" + vehicleId + "|"
-                + startDate + "|" + endDate + "|" + status + "|" + getBookingType();
-    }
-
     /**
      * Routes a candidate booking to the correct subclass based on lead time.
      * daysAhead < 7 → InstantBooking

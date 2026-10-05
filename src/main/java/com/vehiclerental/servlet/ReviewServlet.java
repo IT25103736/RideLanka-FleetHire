@@ -1,260 +1,84 @@
 package com.vehiclerental.servlet;
 
 import com.vehiclerental.model.Review;
+import com.vehiclerental.model.User;
 import com.vehiclerental.notification.NotificationService;
-import com.vehiclerental.util.ReviewFileHandler;
+import com.vehiclerental.repository.AuditRepository;
+import com.vehiclerental.repository.FeedbackRepository;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
 @RequestMapping("/review")
 public class ReviewServlet {
+    private final FeedbackRepository feedback;
+    private final NotificationService notifications;
+    private final AuditRepository audit;
+    public ReviewServlet(FeedbackRepository feedback,NotificationService notifications,AuditRepository audit){this.feedback=feedback;this.notifications=notifications;this.audit=audit;}
 
-    //  show submission form
     @GetMapping("/submit")
-    public String showSubmitForm(Model model) {
-        return "submitReview";
-    }
+    public String form(HttpSession session,Model model){User u=customer(session);if(u==null)return"redirect:/login";return"submitReview";}
 
-    //  save a new review
     @PostMapping("/submit")
-    public String handleSubmit(
-            @RequestParam String vehicleId,
-            @RequestParam String reviewType,
-            @RequestParam int    rating,
-            @RequestParam(required = false, defaultValue = "") String title,
-            @RequestParam String comment,
-            @RequestParam(required = false) String bookingId,
-            HttpSession session,
-            Model model) {
-
-        Object loggedUser = session.getAttribute("loggedUser");
-        String userId   = "GUEST";
-        String username = "Anonymous";
-
-        if (loggedUser != null) {
-            try {
-                userId   = (String) loggedUser.getClass().getMethod("getId").invoke(loggedUser);
-                username = (String) loggedUser.getClass().getMethod("getName").invoke(loggedUser);
-            } catch (Exception e) {
-
-            }
-        }
-
-        String reviewId   = ReviewFileHandler.generateId();
-        String reviewDate = LocalDate.now().toString();
-        String status     = "approved"; // ← auto-approve, no admin needed
-
-        Review review = new Review(
-                reviewId, vehicleId, userId, username,
-                rating, comment, reviewDate, status, reviewType
-        );
-
-        boolean saved = ReviewFileHandler.saveReview(review);
-
-        if (saved) {
-            model.addAttribute("successMsg", "Review submitted successfully!");
-            // Notify admins so the moderation panel surfaces fresh activity.
-            try {
-                NotificationService.get().reviewSubmitted(username, rating,
-                        vehicleId == null ? "a vehicle" : vehicleId);
-            } catch (RuntimeException ex) {
-                System.err.println("[ReviewServlet] notification failed: " + ex.getMessage());
-            }
-        } else {
-            model.addAttribute("errorMsg", "Failed to save review. Please try again.");
-        }
-        return "submitReview";
+    public String submit(@RequestParam String vehicleId,@RequestParam String reviewType,@RequestParam int rating,
+                         @RequestParam(required=false,defaultValue="") String title,@RequestParam String comment,
+                         @RequestParam(required=false) String bookingId,HttpSession session,Model model){
+        User u=customer(session);if(u==null)return"redirect:/login";
+        try{
+            validate(rating,comment,title);
+            vehicleId=vehicleId==null?"":vehicleId.trim();
+            bookingId=bookingId==null?null:bookingId.trim();
+            if(vehicleId.isBlank()||vehicleId.length()>20)throw new IllegalArgumentException("Enter a valid vehicle ID.");
+            if(bookingId!=null&&!bookingId.isBlank()&&bookingId.length()>20)throw new IllegalArgumentException("Enter a valid booking ID.");
+            String full=(title==null||title.isBlank())?comment.trim():title.trim()+" - "+comment.trim();
+            if(full.length()>1000)throw new IllegalArgumentException("Review text is too long.");
+            String id=feedback.create(u.getId(),vehicleId,bookingId,rating,full,reviewType);audit.log(u.getId(),"CREATE_FEEDBACK",id,"Vehicle "+vehicleId);
+            notifications.reviewSubmitted(u.getName(),rating,vehicleId);model.addAttribute("successMsg","Review submitted successfully.");
+        }catch(Exception ex){model.addAttribute("errorMsg",userMessage(ex));}
+        return"submitReview";
     }
-
 
     @GetMapping("/view")
-    public String viewReviews(
-            @RequestParam(required = false) String vehicleId,
-            @RequestParam(required = false) String rating,
-            @RequestParam(required = false) String search,
-            Model model,
-            HttpSession session) {
-
-        List<Review> all     = ReviewFileHandler.readAllReviews();
-        List<Review> approved = ReviewFileHandler.filterByStatus(all, "approved");
-
-        if (vehicleId != null && !vehicleId.isEmpty()) {
-            approved.removeIf(r -> !r.getVehicleId().equals(vehicleId));
-        }
-        if (rating != null && !rating.isEmpty()) {
-            try {
-                int minRating = Integer.parseInt(rating);
-                approved.removeIf(r -> r.getRating() < minRating);
-            } catch (NumberFormatException ignored) {}
-        }
-        if (search != null && !search.isEmpty()) {
-            String lower = search.toLowerCase();
-            approved.removeIf(r ->
-                    !r.getComment().toLowerCase().contains(lower) &&
-                            !r.getUsername().toLowerCase().contains(lower));
-        }
-
-        Object loggedUser = session.getAttribute("loggedUser");
-        String sessionUserId = "";
-        String sessionRole   = "";
-        if (loggedUser != null) {
-            try {
-                sessionUserId = (String) loggedUser.getClass().getMethod("getId").invoke(loggedUser);
-                sessionRole   = (String) loggedUser.getClass().getMethod("getRole").invoke(loggedUser);
-            } catch (Exception e) { /* fallback */ }
-        }
-
-        model.addAttribute("reviews",       approved);
-        model.addAttribute("sessionUserId", sessionUserId);
-        model.addAttribute("sessionRole",   sessionRole);
-        return "viewReviews";
+    public String view(@RequestParam(required=false)String vehicleId,@RequestParam(required=false)String rating,@RequestParam(required=false)String search,Model model,HttpSession session){
+        try{
+            List<Review> rows=new ArrayList<>(feedback.findVisible());
+            if(vehicleId!=null&&!vehicleId.isBlank())rows.removeIf(r->!vehicleId.equalsIgnoreCase(r.getVehicleId()));
+            if(rating!=null&&!rating.isBlank()){try{int min=Integer.parseInt(rating);rows.removeIf(r->r.getRating()<min);}catch(NumberFormatException ignored){}}
+            if(search!=null&&!search.isBlank()){String q=search.toLowerCase();rows.removeIf(r->!(r.getComment().toLowerCase().contains(q)||r.getUsername().toLowerCase().contains(q)));}
+            User u=current(session);model.addAttribute("reviews",rows);model.addAttribute("sessionUserId",u==null?"":u.getId());model.addAttribute("sessionRole",u==null?"":u.getRole().toLowerCase());
+        }catch(SQLException ex){model.addAttribute("reviews",List.of());model.addAttribute("errorMsg","Unable to load feedback.");}
+        return"viewReviews";
     }
 
-    // edit
     @GetMapping("/edit")
-    public String showEditForm(
-            @RequestParam String reviewId,
-            HttpSession session,
-            Model model) {
+    public String edit(@RequestParam String reviewId,HttpSession session,Model model){User u=current(session);if(u==null)return"redirect:/login";try{Review r=feedback.findById(reviewId);if(r==null||!(u.getId().equals(r.getUserId())||"ADMIN".equalsIgnoreCase(u.getRole())))return"redirect:/review/view";model.addAttribute("review",r);return"editReview";}catch(SQLException e){return"redirect:/review/view";}}
 
-        Object loggedUser = session.getAttribute("loggedUser");
-        String sessionUserId = "";
-        String sessionRole   = "";
-        if (loggedUser != null) {
-            try {
-                sessionUserId = (String) loggedUser.getClass().getMethod("getId").invoke(loggedUser);
-                sessionRole   = (String) loggedUser.getClass().getMethod("getRole").invoke(loggedUser);
-            } catch (Exception e) { /* fallback */ }
-        }
-
-        Review review = ReviewFileHandler.findById(reviewId);
-
-        if (review == null) {
-            return "redirect:/review/view";
-        }
-
-
-        if (!sessionUserId.equals(review.getUserId()) && !"admin".equals(sessionRole)) {
-            return "redirect:/review/view";
-        }
-
-        model.addAttribute("review", review);
-        return "editReview";
-    }
-
-    // save edited review
     @PostMapping("/edit")
-    public String handleEdit(
-            @RequestParam String reviewId,
-            @RequestParam int    rating,
-            @RequestParam String comment,
-            @RequestParam String reviewType,
-            HttpSession session,
-            Model model) {
-
-        Object loggedUser = session.getAttribute("loggedUser");
-        String sessionUserId = "";
-        String sessionRole   = "";
-        if (loggedUser != null) {
-            try {
-                sessionUserId = (String) loggedUser.getClass().getMethod("getId").invoke(loggedUser);
-                sessionRole   = (String) loggedUser.getClass().getMethod("getRole").invoke(loggedUser);
-            } catch (Exception e) { /* fallback */ }
-        }
-
-        Review review = ReviewFileHandler.findById(reviewId);
-
-        if (review == null) {
-            return "redirect:/review/view";
-        }
-
-
-        if (!sessionUserId.equals(review.getUserId()) && !"admin".equals(sessionRole)) {
-            return "redirect:/review/view";
-        }
-
-        review.setRating(rating);
-        review.setComment(comment);
-        review.setReviewType(reviewType);
-
-        boolean updated = ReviewFileHandler.updateReview(review);
-
-        if (updated) {
-            model.addAttribute("successMsg", "Review updated successfully!");
-        } else {
-            model.addAttribute("errorMsg", "Failed to update review.");
-        }
-        model.addAttribute("review", review);
-        return "editReview";
+    public String saveEdit(@RequestParam String reviewId,@RequestParam int rating,@RequestParam String comment,@RequestParam String reviewType,HttpSession session,Model model){
+        User u=current(session);if(u==null)return"redirect:/login";try{validate(rating,comment,"");Review r=feedback.findById(reviewId);if(r==null)return"redirect:/review/view";boolean admin="ADMIN".equalsIgnoreCase(u.getRole());if(!admin&&!u.getId().equals(r.getUserId()))return"redirect:/review/view";
+            boolean ok;if(admin){ // admin moderation should not silently rewrite customer text; only owner edits content
+                ok=false;model.addAttribute("errorMsg","Administrators can moderate feedback status but cannot rewrite customer feedback.");
+            }else ok=feedback.updateOwned(reviewId,u.getId(),rating,comment,reviewType);
+            if(ok){audit.log(u.getId(),"UPDATE_FEEDBACK",reviewId,"Customer edited feedback");model.addAttribute("successMsg","Review updated successfully.");r=feedback.findById(reviewId);}model.addAttribute("review",r);return"editReview";
+        }catch(Exception ex){model.addAttribute("errorMsg",userMessage(ex));return"editReview";}
     }
-
 
     @GetMapping("/moderate")
-    public String showModeration(
-            @RequestParam(defaultValue = "approved") String tab,
-            Model model) {
+    public String moderate(@RequestParam(defaultValue="approved")String tab,HttpSession session,Model model){User u=current(session);if(u==null||!"ADMIN".equalsIgnoreCase(u.getRole()))return"redirect:/dashboard";try{List<Review>all=feedback.findAllForModeration();List<Review>approved=all.stream().filter(r->"approved".equalsIgnoreCase(r.getStatus())).toList();List<Review>flagged=all.stream().filter(r->"flagged".equalsIgnoreCase(r.getStatus())).toList();model.addAttribute("reviews","flagged".equals(tab)?flagged:approved);model.addAttribute("approvedCount",approved.size());model.addAttribute("flaggedCount",flagged.size());model.addAttribute("tab",tab);}catch(SQLException e){model.addAttribute("reviews",List.of());}return"moderationPanel";}
+    @PostMapping("/flag") public String flag(@RequestParam String reviewId,HttpSession s){return moderateStatus(reviewId,"flagged",s,"approved");}
+    @PostMapping("/unflag") public String unflag(@RequestParam String reviewId,HttpSession s){return moderateStatus(reviewId,"approved",s,"flagged");}
+    @PostMapping("/delete") public String delete(@RequestParam String reviewId,@RequestParam(defaultValue="approved")String tab,HttpSession s){User u=current(s);if(u==null)return"redirect:/login";try{boolean admin="ADMIN".equalsIgnoreCase(u.getRole());if(feedback.removeOwnedOrAdmin(reviewId,u.getId(),admin))audit.log(u.getId(),"REMOVE_FEEDBACK",reviewId,"Feedback removed");return admin?"redirect:/review/moderate?tab="+tab:"redirect:/review/view";}catch(SQLException e){return"redirect:/review/view";}}
+    private String moderateStatus(String id,String status,HttpSession s,String tab){User u=current(s);if(u==null||!"ADMIN".equalsIgnoreCase(u.getRole()))return"redirect:/dashboard";try{feedback.setStatus(id,status);audit.log(u.getId(),"MODERATE_FEEDBACK",id,status);}catch(SQLException ignored){}return"redirect:/review/moderate?tab="+tab;}
 
-        List<Review> all      = ReviewFileHandler.readAllReviews();
-        List<Review> approved = ReviewFileHandler.filterByStatus(all, "approved");
-        List<Review> flagged  = ReviewFileHandler.filterByStatus(all, "flagged");
-
-        List<Review> displayed = "flagged".equals(tab) ? flagged : approved;
-
-        model.addAttribute("reviews",       displayed);
-        model.addAttribute("approvedCount", approved.size());
-        model.addAttribute("flaggedCount",  flagged.size());
-        model.addAttribute("tab",           tab);
-        return "moderationPanel";
-    }
-
-
-    @PostMapping("/flag")
-    public String flagReview(@RequestParam String reviewId) {
-        ReviewFileHandler.updateStatus(reviewId, "flagged");
-        return "redirect:/review/moderate?tab=approved";
-    }
-
-
-    @PostMapping("/unflag")
-    public String unflagReview(@RequestParam String reviewId) {
-        ReviewFileHandler.updateStatus(reviewId, "approved");
-        return "redirect:/review/moderate?tab=flagged";
-    }
-
-    // delete ─
-    @PostMapping("/delete")
-    public String deleteReview(
-            @RequestParam String reviewId,
-            @RequestParam(defaultValue = "approved") String tab,
-            HttpSession session) {
-
-        Object loggedUser = session.getAttribute("loggedUser");
-        String sessionRole   = "";
-        String sessionUserId = "";
-
-        if (loggedUser != null) {
-            try {
-                sessionRole   = (String) loggedUser.getClass().getMethod("getRole").invoke(loggedUser);
-                sessionUserId = (String) loggedUser.getClass().getMethod("getId").invoke(loggedUser);
-            } catch (Exception e) { /* fallback */ }
-        }
-
-        Review review = ReviewFileHandler.findById(reviewId);
-
-        if (review != null &&
-                ("admin".equals(sessionRole) || sessionUserId.equals(review.getUserId()))) {
-            ReviewFileHandler.deleteReview(reviewId);
-        }
-
-        if ("admin".equals(sessionRole)) {
-            return "redirect:/review/moderate?tab=" + tab;
-        }
-        return "redirect:/review/view";
-    }
+    private static void validate(int rating,String comment,String title){if(rating<1||rating>5)throw new IllegalArgumentException("Rating must be between 1 and 5.");if(comment==null||comment.trim().length()<5||comment.length()>1000)throw new IllegalArgumentException("Comment must be between 5 and 1000 characters.");if(title!=null&&title.trim().length()>120)throw new IllegalArgumentException("Review title is too long.");if(containsMarkup(comment)||containsMarkup(title))throw new IllegalArgumentException("HTML markup is not allowed in feedback.");}
+    private static boolean containsMarkup(String s){return s!=null&&(s.contains("<")||s.contains(">"));}
+    private static User current(HttpSession s){Object x=s==null?null:s.getAttribute("loggedUser");return x instanceof User?(User)x:null;}private static User customer(HttpSession s){User u=current(s);return u!=null&&"CUSTOMER".equalsIgnoreCase(u.getRole())?u:null;}
+    private static String userMessage(Exception ex){if(ex instanceof IllegalArgumentException||ex instanceof IllegalStateException)return safe(ex.getMessage());if(ex instanceof SQLException)System.err.println("[ReviewServlet] database operation failed: "+ex.getMessage());return "Unable to save feedback.";}
+    private static String safe(String s){return s==null?"Unable to save feedback.":s.replace('\n',' ');}
 }

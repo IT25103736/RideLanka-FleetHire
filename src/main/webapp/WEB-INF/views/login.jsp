@@ -1,10 +1,11 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sign in — VRMS</title>
+  <title>Sign in — RideLanka FleetHire</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&family=Space+Grotesk:wght@500;600;700&family=Bebas+Neue&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -204,9 +205,9 @@
 
   <aside class="auth-poster">
     <a href="${pageContext.request.contextPath}/" class="auth-brand" style="text-decoration:none;">
-      <img src="${pageContext.request.contextPath}/images/vrms-logo.png" alt="VRMS"/>
+      <img src="${pageContext.request.contextPath}/images/vrms-logo.png" alt="RideLanka FleetHire"/>
       <div class="auth-brand__text">
-        <span class="brand">VRMS</span>
+        <span class="brand">RideLanka FleetHire</span>
         <small>&mdash; Vehicle Rental &mdash;</small>
       </div>
     </a>
@@ -233,27 +234,33 @@
 
       <div class="auth-form">
 
-        <% if ("registered".equals(request.getParameter("msg"))) { %>
+        <c:if test="${param.msg == 'registered'}">
           <div class="auth-alert auth-alert--ok">
             <i class="ti ti-circle-check"></i>
             <div><strong>Account created.</strong><br/>Please sign in to begin.</div>
           </div>
-        <% } else if ("deleted".equals(request.getParameter("msg"))) { %>
+        </c:if>
+        <c:if test="${param.msg == 'deleted'}">
           <div class="auth-alert auth-alert--info">
             <i class="ti ti-info-circle"></i>
-            <div>Your account has been removed.</div>
+            <div>Your account has been deactivated.</div>
           </div>
-        <% } %>
-        <% if ("db".equals(request.getParameter("error"))) { %>
-          <div class="auth-alert auth-alert--err"><i class="ti ti-database-off"></i><div><strong>Database connection failed.</strong><br/>Check the SQL Server settings in <span class="auth-mono">application.properties</span>.</div></div>
-        <% } %>
-
-        <% if ("invalid".equals(request.getParameter("error"))) { %>
+        </c:if>
+        <c:if test="${param.msg == 'passwordChanged'}">
+          <div class="auth-alert auth-alert--ok">
+            <i class="ti ti-shield-check"></i>
+            <div><strong>Password changed.</strong><br/>You can now sign in with your new password.</div>
+          </div>
+        </c:if>
+        <c:if test="${param.error == 'db'}">
+          <div class="auth-alert auth-alert--err"><i class="ti ti-database-off"></i><div><strong>Database connection failed.</strong><br/>Please try again or contact the system administrator.</div></div>
+        </c:if>
+        <c:if test="${param.error == 'invalid'}">
           <div class="auth-alert auth-alert--err">
             <i class="ti ti-alert-circle"></i>
             <div><strong>Couldn't sign you in.</strong><br/>The email or password didn't match.</div>
           </div>
-        <% } %>
+        </c:if>
 
         <form action="${pageContext.request.contextPath}/user/login" method="post">
           <div class="auth-fld">
@@ -261,7 +268,7 @@
             <div class="auth-fld__wrap">
               <i class="ti ti-mail"></i>
               <input type="email" id="email" name="email"
-                     placeholder="kamal@example.com" required autofocus/>
+                     placeholder="kamal@example.com" maxlength="180" autocomplete="email" required autofocus/>
             </div>
           </div>
 
@@ -270,7 +277,7 @@
             <div class="auth-fld__wrap">
               <i class="ti ti-lock"></i>
               <input type="password" id="password" name="password"
-                     placeholder="Enter your password" required/>
+                     placeholder="Enter your password" maxlength="200" autocomplete="current-password" required/>
             </div>
           </div>
 
@@ -279,6 +286,11 @@
             <span class="ico-pill"><i class="ti ti-arrow-right"></i></span>
           </button>
         </form>
+
+        <div class="auth-switch" style="margin-top:16px;">
+          Know your current password but need a new one?
+          <a href="${pageContext.request.contextPath}/change-password">Change password</a>
+        </div>
 
         <div class="auth-divider">or</div>
 

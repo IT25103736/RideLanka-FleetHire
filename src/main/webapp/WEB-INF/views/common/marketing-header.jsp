@@ -5,7 +5,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>${pageTitle != null ? pageTitle : 'VRMS'} — Vehicle Rental</title>
+  <title>${pageTitle != null ? pageTitle : 'RideLanka FleetHire'} — Vehicle Rental</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Bebas+Neue&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -18,11 +18,11 @@
   <!-- ═══ Boxcar-style horizontal navbar ═══ -->
   <nav class="mkt-nav">
     <div class="mkt-nav__inner">
-      <a href="${pageContext.request.contextPath}/" class="mkt-brand" aria-label="VRMS home">
+      <a href="${pageContext.request.contextPath}/" class="mkt-brand" aria-label="RideLanka FleetHire home">
         <img src="${pageContext.request.contextPath}/images/vrms-logo.png"
-             alt="VRMS — Vehicle Rental" class="mkt-brand__img"/>
+             alt="RideLanka FleetHire — Vehicle Rental" class="mkt-brand__img"/>
         <span class="mkt-brand__text">
-          <span class="brand">VRMS</span>
+          <span class="brand">RideLanka FleetHire</span>
           <small>&mdash; Vehicle Rental &mdash;</small>
         </span>
       </a>
@@ -112,7 +112,7 @@
 
   <!-- ═══ Floating WhatsApp launcher — sitewide, glass pill, bottom-right ═══ -->
   <a class="mkt-whatsapp" id="mktWhatsapp"
-     href="https://wa.me/94778119913?text=Hi%20VRMS%20%E2%80%94%20I%27m%20looking%20to%20book%20a%20vehicle"
+     href="https://wa.me/94778119913?text=Hi%20RideLanka FleetHire%20%E2%80%94%20I%27m%20looking%20to%20book%20a%20vehicle"
      target="_blank" rel="noopener"
      aria-label="Chat with us on WhatsApp"
      data-antigravity>

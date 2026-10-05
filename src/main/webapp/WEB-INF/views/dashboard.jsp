@@ -391,11 +391,11 @@
         type: 'line',
         data: { labels: wLabels, datasets: [{
           label: 'LKR', data: wValues,
-          borderColor: VRMS_CHART.primary, backgroundColor: grad,
+          borderColor: RIDELANKA_CHART.primary, backgroundColor: grad,
           tension: 0.35, fill: true, pointRadius: 2
         }]},
         options: { responsive: true, plugins: { legend: { display: false } },
-          scales: { y: { grid: { color: VRMS_CHART.gridColor } }, x: { grid: { display: false } } } }
+          scales: { y: { grid: { color: RIDELANKA_CHART.gridColor } }, x: { grid: { display: false } } } }
       });
     }
 
@@ -406,7 +406,7 @@
         type: 'doughnut',
         data: { labels: ['Instant', 'Advance'],
           datasets: [{ data: [${instantCount}, ${advanceCount}],
-            backgroundColor: [VRMS_CHART.primary, VRMS_CHART.warn],
+            backgroundColor: [RIDELANKA_CHART.primary, RIDELANKA_CHART.warn],
             borderColor: 'rgba(0,0,0,0.15)', borderWidth: 2 }] },
         options: { responsive: true, cutout: '62%', plugins: { legend: { position: 'bottom' } } }
       });

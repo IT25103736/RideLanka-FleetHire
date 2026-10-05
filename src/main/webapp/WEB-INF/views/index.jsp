@@ -106,7 +106,7 @@
     <article class="chauf-card" data-antigravity>
       <div class="chauf-card__media">
         <span class="chauf-card__chip"><i class="ti ti-plane-arrival"></i> Airport</span>
-        <img src="https://images.pexels.com/photos/2920064/pexels-photo-2920064.jpeg?auto=compress&cs=tinysrgb&w=900" alt="Airport transfer" loading="lazy" decoding="async"/>
+        <img src="https://images.pexels.com/photos/2920064/pexels-photo-2920064.jpeg?auto=compress&cs=tinysrgb&w=900" alt="Airport transfer" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/images/vehicles/default-vehicle.jpg'"/>
       </div>
       <div class="chauf-card__body">
         <h3 class="chauf-card__title">Airport Transfer</h3>
@@ -135,7 +135,7 @@
     <article class="chauf-card" data-antigravity>
       <div class="chauf-card__media">
         <span class="chauf-card__chip chauf-card__chip--accent"><i class="ti ti-mountain"></i> Day tour</span>
-        <img src="https://images.pexels.com/photos/116675/pexels-photo-116675.jpeg?auto=compress&cs=tinysrgb&w=900" alt="Hill country day tour" loading="lazy" decoding="async"/>
+        <img src="https://images.pexels.com/photos/116675/pexels-photo-116675.jpeg?auto=compress&cs=tinysrgb&w=900" alt="Hill country day tour" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/images/vehicles/default-vehicle.jpg'"/>
       </div>
       <div class="chauf-card__body">
         <h3 class="chauf-card__title">Hill Country Day Tour</h3>
@@ -164,7 +164,7 @@
     <article class="chauf-card" data-antigravity>
       <div class="chauf-card__media">
         <span class="chauf-card__chip"><i class="ti ti-route"></i> Multi-day</span>
-        <img src="https://images.pexels.com/photos/1429775/pexels-photo-1429775.jpeg?auto=compress&cs=tinysrgb&w=900" alt="Multi-day island tour" loading="lazy" decoding="async"/>
+        <img src="https://images.pexels.com/photos/1429775/pexels-photo-1429775.jpeg?auto=compress&cs=tinysrgb&w=900" alt="Multi-day island tour" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/images/vehicles/default-vehicle.jpg'"/>
       </div>
       <div class="chauf-card__body">
         <h3 class="chauf-card__title">5-Day Island Loop</h3>
@@ -299,8 +299,8 @@
                   </c:when>
                 </c:choose>
                 <button class="feat-card__fav" aria-label="Save"><i class="ti ti-heart"></i></button>
-                <img src="${v.imageUrl}" alt="${v.brand} ${v.model}" loading="lazy" decoding="async"
-                     onerror="this.style.background='linear-gradient(135deg, #1a2335, #0b1118)'; this.removeAttribute('src');"/>
+                <img src="${v.imageUrl}" alt="${v.brand} ${v.model}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/images/vehicles/default-vehicle.jpg'"
+                    />
               </div>
               <div class="feat-card__body">
                 <h3 class="feat-card__title">${v.brand} ${v.model}</h3>
@@ -358,7 +358,7 @@
 
       </c:when>
       <c:otherwise>
-        <!-- Defensive: if data/vehicles.txt is empty or unreadable, the rail collapses cleanly -->
+        <!-- Defensive: if MSSQL vehicles is empty or unreadable, the rail collapses cleanly -->
         <div class="testi-empty" style="margin-top:24px;">
           <i class="ti ti-car-off"></i>
           <p>No vehicles on the floor right now &mdash; check back shortly.</p>
@@ -451,7 +451,7 @@
   <div class="mkt-section-inner">
     <div class="mkt-section-head">
       <div class="lead">
-        <span class="eyebrow">Why VRMS</span>
+        <span class="eyebrow">Why RideLanka FleetHire</span>
         <h2>We're <em>big</em> on what matters to you.</h2>
         <p>Three quiet promises &mdash; engineered into every reservation, on and off the road.</p>
       </div>
@@ -484,8 +484,7 @@
         <span class="feat-block__num">02 — Pricing</span>
         <h3 class="feat-block__title">Transparent <em>in LKR.</em></h3>
         <p class="feat-block__desc">
-          Daily rates posted up front. Avurudu offers, loyalty points, and
-          promo codes resolved at checkout &mdash; never as a surprise.
+          Daily rates are posted up front, and eligible promo codes are validated at checkout against the database.
         </p>
       </div>
 
@@ -529,7 +528,7 @@
 </section>
 
 <!-- ═══════════════════════════════════════════════════════
-     TESTIMONIALS — pulled live from data/reviews.txt
+     TESTIMONIALS — pulled live from MSSQL feedback
      ═══════════════════════════════════════════════════════ -->
 <section class="mkt-section reveal" id="testimonials">
   <div class="mkt-section-head">
@@ -615,7 +614,7 @@
     <div class="mkt-section-head">
       <div class="lead">
         <span class="eyebrow">Stories from the road</span>
-        <h2>From the <em>VRMS blog.</em></h2>
+        <h2>From the <em>RideLanka FleetHire blog.</em></h2>
         <p>Routes worth driving, vehicles worth booking, and what we've learned curating both.</p>
       </div>
       <a href="#" class="btn btn-secondary btn-sm">
@@ -627,7 +626,7 @@
 
       <a href="#" class="story-card">
         <div class="story-card__media">
-          <img src="https://images.pexels.com/photos/1118447/pexels-photo-1118447.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Mountain road" loading="lazy" decoding="async"/>
+          <img src="https://images.pexels.com/photos/1118447/pexels-photo-1118447.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Mountain road" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/images/vehicles/default-vehicle.jpg'"/>
         </div>
         <div class="story-card__body">
           <span class="story-card__cat">ROUTES</span>
@@ -638,7 +637,7 @@
 
       <a href="#" class="story-card">
         <div class="story-card__media">
-          <img src="https://images.pexels.com/photos/3786091/pexels-photo-3786091.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Hybrid car" loading="lazy" decoding="async"/>
+          <img src="https://images.pexels.com/photos/3786091/pexels-photo-3786091.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Hybrid car" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/images/vehicles/default-vehicle.jpg'"/>
         </div>
         <div class="story-card__body">
           <span class="story-card__cat">HYBRID</span>
@@ -649,12 +648,12 @@
 
       <a href="#" class="story-card">
         <div class="story-card__media">
-          <img src="https://images.pexels.com/photos/210600/pexels-photo-210600.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Coins and loyalty" loading="lazy" decoding="async"/>
+          <img src="https://images.pexels.com/photos/210600/pexels-photo-210600.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Promotions and savings" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/images/vehicles/default-vehicle.jpg'"/>
         </div>
         <div class="story-card__body">
-          <span class="story-card__cat">LOYALTY</span>
+          <span class="story-card__cat">PROMOTIONS</span>
           <span class="story-card__meta">A. Kumarasinghe &nbsp;·&nbsp; 21 Apr 2026</span>
-          <h3 class="story-card__title">How the VRMS loyalty card actually pays back.</h3>
+          <h3 class="story-card__title">How RideLanka FleetHire promotion codes work at checkout.</h3>
         </div>
       </a>
 
@@ -669,7 +668,7 @@
   <div class="news-split">
 
     <div class="news-poster">
-      <span class="news-poster__eyebrow">VRMS Mailings</span>
+      <span class="news-poster__eyebrow">RideLanka FleetHire Mailings</span>
       <div>
         <h2 class="news-poster__title">Quiet briefings,<br/><em>once a month.</em></h2>
         <p class="news-poster__sub">

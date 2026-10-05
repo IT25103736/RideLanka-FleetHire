@@ -369,7 +369,7 @@
   <span class="pol-hero__eyebrow">Trust &amp; Compliance</span>
   <h1>Honest policies, <em>plainly explained.</em></h1>
   <p>
-    Every rental at VRMS is governed by transparent, Sri Lanka-compliant policies.
+    Every rental at RideLanka FleetHire is governed by transparent, Sri Lanka-compliant policies.
     Read this before you book &mdash; or any time after &mdash; and contact us if anything
     needs clarifying.
   </p>
@@ -429,7 +429,7 @@
           <li><i class="ti ti-circle-check"></i> An <em>International Driving Permit (IDP)</em> &mdash; obtained in your home country before travel</li>
           <li><i class="ti ti-circle-check"></i> A <em>Sri Lankan Temporary Permit</em> &mdash; issued by the Department of Motor Traffic (DMT) at Werahera, Colombo, or via authorised agents (LKR 2,000, same-day)</li>
         </ul>
-        <p>VRMS can arrange the temporary DMT permit on your behalf for an LKR 1,500 service fee &mdash; just tick the option at checkout and we'll handle the paperwork at pickup.</p>
+        <p>RideLanka FleetHire can arrange the temporary DMT permit on your behalf for an LKR 1,500 service fee &mdash; just tick the option at checkout and we'll handle the paperwork at pickup.</p>
         <p><strong>Sri Lankan citizens</strong> need only their original NIC and full local licence (probationary licences are not accepted).</p>
       </div>
     </details>
@@ -446,7 +446,7 @@
       </summary>
       <div class="pol-section__body">
         <p>To rent any vehicle in our fleet you must be at least <strong>23 years old</strong> and hold a <strong>full driving licence for two consecutive years</strong>.</p>
-        <p>For SUVs, luxury sedans and 12+ seat vans we ask for <strong>5 years of experience</strong> and an age minimum of 25 &mdash; this is an insurance requirement, not a VRMS preference.</p>
+        <p>For SUVs, luxury sedans and 12+ seat vans we ask for <strong>5 years of experience</strong> and an age minimum of 25 &mdash; this is an insurance requirement, not a RideLanka FleetHire preference.</p>
         <p>If you'd rather skip the criteria entirely, our <em>Professional Chauffeur</em> service (+LKR 4,500/day) places an experienced English-speaking driver behind the wheel and removes the age/experience check.</p>
       </div>
     </details>
@@ -465,7 +465,7 @@
         <p>A refundable security deposit of <strong>LKR 25,000</strong> is collected at vehicle pickup. It is held against damage, traffic fines or fuel shortfall during your rental period.</p>
         <p>Payment options: cash (LKR or USD at the day's rate), bank transfer, or pre-authorisation on Visa / Mastercard.</p>
         <p>Post-return, the deposit is released within <strong>5 working days</strong> via the original payment method. Any deductions are itemised in writing with photo evidence.</p>
-        <p><em>Loyalty members</em> &mdash; bookings 3+ within 12 months waive the deposit entirely.</p>
+        <p>Security-deposit requirements are shown during booking and confirmation; no automatic deposit waiver is applied.</p>
       </div>
     </details>
 
@@ -556,7 +556,7 @@
         <ul>
           <li><i class="ti ti-number-1"></i> <strong>Move to safety</strong>. Switch on hazard lights, place the warning triangle 30 m behind the vehicle.</li>
           <li><i class="ti ti-number-2"></i> <strong>Check for injuries</strong>. Dial <em>119</em> (Sri Lanka Police) or <em>110</em> (Ambulance) if anyone needs medical attention.</li>
-          <li><i class="ti ti-number-3"></i> <strong>Call VRMS 24/7</strong>: <em>+94 77 811 9913</em> &mdash; we dispatch a recovery vehicle and replacement within 90 minutes island-wide.</li>
+          <li><i class="ti ti-number-3"></i> <strong>Call RideLanka FleetHire 24/7</strong>: <em>+94 77 811 9913</em> &mdash; we dispatch a recovery vehicle and replacement within 90 minutes island-wide.</li>
           <li><i class="ti ti-number-4"></i> <strong>Document the scene</strong>: photos of all vehicles, plates, position, and damage. Do <em>not</em> admit fault on scene &mdash; let insurance assess.</li>
           <li><i class="ti ti-number-5"></i> <strong>File a police report</strong> within 24 hours at the nearest station for any insurance claim.</li>
         </ul>

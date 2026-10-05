@@ -5,7 +5,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>${pageTitle != null ? pageTitle : 'VRMS'} — Vehicle Rental</title>
+  <title>${pageTitle != null ? pageTitle : 'RideLanka FleetHire'} — Vehicle Rental</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -19,7 +19,7 @@
       Chart.defaults.color = 'rgba(255,255,255,0.65)';
       Chart.defaults.borderColor = 'rgba(255,255,255,0.08)';
       Chart.defaults.font.family = "'DM Sans', system-ui, sans-serif";
-      window.VRMS_CHART = {
+      window.RIDELANKA_CHART = {
         primary: '#6FCBA3',
         primarySoft: 'rgba(111,203,163,0.18)',
         info: '#7DD3FC',
@@ -40,11 +40,11 @@
 
     <a href="${pageContext.request.contextPath}/" class="sidebar-logo"
        style="text-decoration:none; color:inherit;"
-       aria-label="VRMS home">
+       aria-label="RideLanka FleetHire home">
       <img src="${pageContext.request.contextPath}/images/vrms-logo.png"
-           alt="VRMS — Vehicle Rental" class="sidebar-logo__img"/>
+           alt="RideLanka FleetHire — Vehicle Rental" class="sidebar-logo__img"/>
       <div class="logo-text">
-        <span class="brand">VRMS</span>
+        <span class="brand">RideLanka FleetHire</span>
         <small>&mdash; Vehicle Rental &mdash;</small>
       </div>
     </a>
@@ -164,7 +164,7 @@
     <header class="vrms-topbar">
       <div class="topbar-left">
         <span class="topbar-breadcrumb">
-          ${sectionName != null ? sectionName : 'VRMS'}
+          ${sectionName != null ? sectionName : 'RideLanka FleetHire'}
           <span class="sep">·</span>
           <strong>${pageTitle != null ? pageTitle : 'Home'}</strong>
         </span>

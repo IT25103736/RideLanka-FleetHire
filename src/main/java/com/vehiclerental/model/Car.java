@@ -39,15 +39,6 @@ public class Car extends Vehicle {
         if (numberOfSeats <= 4)                   return "Hatchback";
         return "Sedan";
     }
-
-    
-    @Override
-    public String toFileString() {
-        return getVehicleId() + "|" + getVehicleType() + "|" + getBrand() + "|" + getModel()
-                + "|" + getYear() + "|" + getRentalPricePerDay() + "|" + isAvailable()
-                + "|" + numberOfSeats + "|" + getImageUrl();
-    }
-
     // ---- Getter & Setter ----
     public int getNumberOfSeats()              { return numberOfSeats; }
     public void setNumberOfSeats(int seats)    { this.numberOfSeats = seats; }

@@ -56,11 +56,4 @@ public abstract class Payment
     }
 
     // Abstract method - every payment type must implement this
-    public abstract String processPayment();
-
-    // Convert to file format for saving (pipe-delimited)
-    public String toFileString()
-    {
-        return paymentId + "|" + customerName + "|" + amount + "|" + date + "|" + status;
-    }
-}
+    public abstract String processPayment();}

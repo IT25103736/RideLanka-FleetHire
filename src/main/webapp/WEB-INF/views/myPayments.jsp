@@ -178,7 +178,7 @@
   <div class="page-header" style="margin-bottom:0;">
     <span class="eyebrow">Account</span>
     <h1>My <em>payments.</em></h1>
-    <p>Pay for pending bookings, review settled invoices, and track loyalty points &mdash; all in one ledger.</p>
+    <p>Pay for pending bookings and review settled payment records in one MSSQL-backed ledger.</p>
   </div>
   <a href="${pageContext.request.contextPath}/booking?action=form" class="btn btn-primary" data-antigravity>
     <i class="ti ti-plus"></i> New booking
@@ -248,10 +248,14 @@
                     </td>
                     <td style="text-align:right;">
                       <div class="mp-actions">
-                        <a class="mp-btn mp-btn--pay"
-                           href="${pageContext.request.contextPath}/payment/checkout?bookingId=${r.booking.bookingId}&amount=${r.computedTotal}&customerName=${sessionScope.loggedUser.name}">
-                          <i class="ti ti-credit-card"></i> Pay now
-                        </a>
+                        <c:choose>
+                          <c:when test="${r.payStatus == 'PENDING_VERIFICATION'}">
+                            <span class="mp-badge mp-badge--pending"><i class="ti ti-building-bank"></i> Awaiting Finance</span>
+                          </c:when>
+                          <c:otherwise>
+                            <a class="mp-btn mp-btn--pay" href="${pageContext.request.contextPath}/payment/checkout?bookingId=${r.booking.bookingId}"><i class="ti ti-credit-card"></i> Pay now</a>
+                          </c:otherwise>
+                        </c:choose>
                         <form action="${pageContext.request.contextPath}/booking" method="post"
                               style="display:inline;"
                               onsubmit="return confirm('Cancel booking ${r.booking.bookingId}? This cannot be undone.');">
@@ -327,12 +331,9 @@
                     </td>
                     <td>
                       <c:choose>
-                        <c:when test="${r.paymentMethod == 'CARD'}">
-                          <span class="mp-method mp-method--card"><i class="ti ti-credit-card"></i> Card</span>
-                        </c:when>
-                        <c:otherwise>
-                          <span class="mp-method mp-method--wallet"><i class="ti ti-wallet"></i> Wallet</span>
-                        </c:otherwise>
+                        <c:when test="${r.paymentMethod == 'CARD'}"><span class="mp-method mp-method--card"><i class="ti ti-credit-card"></i> Card</span></c:when>
+                        <c:when test="${r.paymentMethod == 'BANK_TRANSFER'}"><span class="mp-method mp-method--wallet"><i class="ti ti-building-bank"></i> Bank transfer</span></c:when>
+                        <c:otherwise><span class="mp-method mp-method--wallet"><i class="ti ti-wallet"></i> Wallet</span></c:otherwise>
                       </c:choose>
                     </td>
                     <td class="mp-mono mp-nowrap">
@@ -401,62 +402,8 @@
       </div>
     </c:if>
 
-    <%-- ── Legacy receipts without a bookingId ── --%>
-    <c:if test="${not empty unlinkedPayments}">
-      <div class="mp-card reveal">
-        <div class="mp-card__head">
-          <h3><i class="ti ti-history"></i> Older receipts</h3>
-          <span class="chip">Imported without booking link</span>
-        </div>
-        <table class="mp-table">
-          <thead>
-            <tr>
-              <th>Method</th>
-              <th>Payment ID</th>
-              <th>Amount</th>
-              <th>Date</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <c:forEach var="line" items="${unlinkedPayments}">
-              <c:set var="parts" value="${fn:split(line, '|')}"/>
-              <c:if test="${fn:length(parts) >= 6}">
-                <tr>
-                  <td>
-                    <c:choose>
-                      <c:when test="${parts[0] == 'CARD'}">
-                        <span class="mp-method mp-method--card"><i class="ti ti-credit-card"></i> Card</span>
-                      </c:when>
-                      <c:otherwise>
-                        <span class="mp-method mp-method--wallet"><i class="ti ti-wallet"></i> Wallet</span>
-                      </c:otherwise>
-                    </c:choose>
-                  </td>
-                  <td class="mp-mono" style="color:#fff;">${parts[1]}</td>
-                  <td class="mp-mono">
-                    <span style="color:var(--bx-primary); font-weight:600;">LKR</span>
-                    <fmt:parseNumber  var="amt"  value="${parts[3]}" integerOnly="false"/>
-                    <fmt:formatNumber value="${amt}" pattern="#,##0.00"/>
-                  </td>
-                  <td class="mp-mono mp-nowrap" style="color:rgba(255,255,255,0.6);">${parts[4]}</td>
-                  <td>
-                    <c:choose>
-                      <c:when test="${parts[5] == 'Success'}"><span class="mp-badge mp-badge--paid">Success</span></c:when>
-                      <c:when test="${parts[5] == 'Failed'}"><span class="mp-badge mp-badge--cancel">Failed</span></c:when>
-                      <c:otherwise><span class="mp-badge mp-badge--gray">${parts[5]}</span></c:otherwise>
-                    </c:choose>
-                  </td>
-                </tr>
-              </c:if>
-            </c:forEach>
-          </tbody>
-        </table>
-      </div>
-    </c:if>
-
-    <%-- ── Truly empty (no bookings AND no legacy receipts) ── --%>
-    <c:if test="${empty rows and empty unlinkedPayments}">
+    <%-- ── Truly empty ── --%>
+    <c:if test="${empty rows}">
       <div class="mp-card reveal">
         <div class="mp-empty" style="padding: 96px 24px;">
           <i class="ti ti-credit-card-off"></i>
@@ -493,11 +440,7 @@
       <div class="mp-stat__hint">Settled bookings on file</div>
     </div>
 
-    <div class="mp-stat reveal" style="background: linear-gradient(135deg, rgba(251,191,36,0.14) 0%, rgba(251,191,36,0.02) 100%); border-color: rgba(251,191,36,0.30);">
-      <div class="mp-stat__lbl">Loyalty points</div>
-      <div class="mp-stat__val" style="color: var(--bx-warning);">${not empty loyaltyPoints ? loyaltyPoints : 0}</div>
-      <div class="mp-stat__hint">Redeemable on your next booking</div>
-    </div>
+
   </aside>
 
 </div>

@@ -479,8 +479,15 @@
       </span>
     </div>
     <div class="bk-card__body">
+      <c:set var="effectiveStartDate" value="${not empty formStartDate ? formStartDate : (editMode ? editBooking.startDate : '')}"/>
+      <c:set var="effectiveDuration" value="${not empty formDuration ? formDuration : (editMode ? editDuration : 3)}"/>
+      <c:set var="effectivePickupLocation" value="${not empty formPickupLocation ? formPickupLocation : (editMode ? editBooking.pickupLocation : '')}"/>
+      <c:set var="effectivePickupTime" value="${not empty formPickupTime ? formPickupTime : (editMode ? editBooking.pickupTime : '')}"/>
+      <c:set var="effectivePhone" value="${not empty formPhone ? formPhone : (editMode ? editBooking.customerPhone : '')}"/>
+      <c:set var="effectiveWithDriver" value="${not empty formWithDriver ? formWithDriver : (editMode ? editBooking.withDriver : false)}"/>
       <form action="${pageContext.request.contextPath}/booking" method="post" id="bookingForm">
-        <input type="hidden" name="action" value="create"/>
+        <input type="hidden" name="action" value="${editMode ? 'update' : 'create'}"/>
+        <c:if test="${editMode}"><input type="hidden" name="bookingId" value="${not empty editBookingId ? editBookingId : editBooking.bookingId}"/></c:if>
 
         <div class="bk-fld" style="margin-bottom:20px;">
           <div id="auto-class-hint" style="padding:14px 16px; background:rgba(111,203,163,0.08); border:1px solid rgba(111,203,163,0.22); border-radius:var(--r-pill); font-size:13px; line-height:1.55; color:var(--bx-body);">
@@ -494,46 +501,58 @@
 
           <div class="bk-fld">
             <label class="bk-fld__lbl" for="customerName">Driver name<span class="req">*</span></label>
-            <input type="text" id="customerName" name="customerName"
-                   placeholder="e.g. Kamal Perera"
-                   value="${not empty sessionScope.loggedUser ? sessionScope.loggedUser.name : ''}" required/>
+            <input type="text" id="customerName"
+                   value="${not empty sessionScope.loggedUser ? sessionScope.loggedUser.name : ''}" readonly/>
           </div>
 
           <div class="bk-fld">
             <label class="bk-fld__lbl" for="vehicleId">Vehicle<span class="req">*</span></label>
-            <select id="vehicleId" name="vehicleId" required onchange="onVehicleChange()">
-              <option value="">— Select vehicle —</option>
-              <c:forEach var="v" items="${vehicleList}">
-                <option value="${v.vehicleId}"
-                        data-rate="${v.rentalPricePerDay}"
-                        ${v.vehicleId == vehicleId ? 'selected' : ''}>
-                  ${v.brand} ${v.model} (${v.displayCategory}) — LKR ${v.rentalPricePerDay}/day
-                </option>
-              </c:forEach>
-            </select>
+            <c:choose>
+              <c:when test="${editMode}">
+                <input type="hidden" name="vehicleId" value="${vehicleId}"/>
+                <select id="vehicleId" disabled>
+                  <c:forEach var="v" items="${vehicleList}">
+                    <option value="${v.vehicleId}" data-rate="${v.rentalPricePerDay}" ${v.vehicleId == vehicleId ? 'selected' : ''}>
+                      ${v.brand} ${v.model} (${v.displayCategory}) — LKR ${v.rentalPricePerDay}/day
+                    </option>
+                  </c:forEach>
+                </select>
+                <small style="font-size:11px;color:rgba(255,255,255,0.5);">Vehicle cannot be changed after a reservation is created.</small>
+              </c:when>
+              <c:otherwise>
+                <select id="vehicleId" name="vehicleId" required onchange="onVehicleChange()">
+                  <option value="">— Select vehicle —</option>
+                  <c:forEach var="v" items="${vehicleList}">
+                    <option value="${v.vehicleId}" data-rate="${v.rentalPricePerDay}" ${v.vehicleId == vehicleId ? 'selected' : ''}>
+                      ${v.brand} ${v.model} (${v.displayCategory}) — LKR ${v.rentalPricePerDay}/day
+                    </option>
+                  </c:forEach>
+                </select>
+              </c:otherwise>
+            </c:choose>
           </div>
 
           <div class="bk-fld">
             <label class="bk-fld__lbl" for="startDate">Start date<span class="req">*</span></label>
-            <input type="date" id="startDate" name="startDate" required/>
+            <input type="date" id="startDate" name="startDate" value="${effectiveStartDate}" required/>
           </div>
 
           <div class="bk-fld">
             <label class="bk-fld__lbl" for="duration">Duration · days<span class="req">*</span></label>
             <input type="number" id="duration" name="duration"
-                   min="1" max="365" placeholder="e.g. 3" value="3" required onchange="updateSummary()"/>
+                   min="1" max="90" placeholder="e.g. 3" value="${effectiveDuration}" required onchange="updateSummary()"/>
           </div>
 
           <div class="bk-fld">
             <label class="bk-fld__lbl" for="dailyRate">Daily rate · LKR</label>
-            <input type="number" id="dailyRate" name="dailyRate"
+            <input type="number" id="dailyRate" name="dailyRate" min="0"
                    placeholder="auto-filled from vehicle"
                    value="${not empty dailyRate ? dailyRate : ''}" readonly/>
           </div>
 
           <div class="bk-fld">
             <label class="bk-fld__lbl" for="phone">Contact number</label>
-            <input type="tel" id="phone" name="phone" placeholder="e.g. 0771234567"/>
+            <input type="tel" id="phone" name="phone" value="${effectivePhone}" placeholder="e.g. 0771234567" maxlength="16" inputmode="tel" pattern="(?:\+94|94|0)?7[0-9]{8}"/>
           </div>
 
           <div class="bk-fld">
@@ -541,7 +560,7 @@
             <select id="pickupLocation" name="pickupLocation" required>
               <option value="">— Select location —</option>
               <c:forEach var="loc" items="${pickupLocations}">
-                <option value="${loc}">${loc}</option>
+                <option value="${loc}" ${loc == effectivePickupLocation ? 'selected' : ''}>${loc}</option>
               </c:forEach>
             </select>
           </div>
@@ -551,7 +570,7 @@
             <select id="pickupTime" name="pickupTime" required>
               <option value="">— Select time —</option>
               <c:forEach var="t" items="${pickupTimes}">
-                <option value="${t}">${t}</option>
+                <option value="${t}" ${t == effectivePickupTime ? 'selected' : ''}>${t}</option>
               </c:forEach>
             </select>
             <small style="font-size:11px; color:rgba(255,255,255,0.5); margin-top:4px;">
@@ -562,7 +581,7 @@
           <!-- With-driver toggle -->
           <div class="bk-fld bk-form-grid--full">
             <label class="bk-driver">
-              <input type="checkbox" name="withDriver" id="withDriver" value="true" onchange="updateSummary()"/>
+              <input type="checkbox" name="withDriver" id="withDriver" value="true" ${effectiveWithDriver ? 'checked' : ''} onchange="updateSummary()"/>
               <span class="bk-driver__dot"></span>
               <span class="bk-driver__text">
                 <strong>With Professional Chauffeur</strong>
@@ -572,15 +591,9 @@
             </label>
           </div>
 
-          <div class="bk-fld bk-form-grid--full">
-            <label class="bk-fld__lbl" for="notes">Special requests · Notes</label>
-            <textarea id="notes" name="notes"
-                      placeholder="Child seat, late pickup, delivery to hotel..."></textarea>
-          </div>
-
         </div>
 
-        <!-- Rental requirements (mandatory acceptance) -->
+        <!-- Rental requirements: new bookings must explicitly accept them. -->
         <details class="bk-terms" id="bkTerms" open>
           <summary class="bk-terms__head">
             <span class="bk-terms__icon"><i class="ti ti-list-check"></i></span>
@@ -596,28 +609,30 @@
               <li><i class="ti ti-user-check"></i> Minimum age <em>23</em> with at least <em>2 years on a full licence</em>, or book with chauffeur to skip these</li>
               <li><i class="ti ti-credit-card"></i> Refundable <em>LKR 25,000 deposit</em> at pickup, released within 5 working days post-trip</li>
               <li><i class="ti ti-gas-station"></i> <em>Full-to-full fuel policy</em> &mdash; return with the same level you collected</li>
-              <li><i class="ti ti-umbrella"></i> Comprehensive insurance included (LKR 75,000 excess); zero-excess add-on at LKR 1,200/day</li>
-              <li><i class="ti ti-calendar-x"></i> Free cancellation 24h+ before pickup; tiered refund schedule beyond that</li>
+              <li><i class="ti ti-umbrella"></i> Booking protection charge of LKR 1,200/day is included in the calculated booking total</li>
+              <li><i class="ti ti-calendar-x"></i> Cancellation is available while a booking is PENDING or CONFIRMED; any recorded demo payment is voided with cancellation</li>
             </ul>
             <p>The full version lives at <a href="${pageContext.request.contextPath}/policies" target="_blank">Rental Policies &rarr;</a></p>
           </div>
         </details>
 
-        <label class="bk-accept">
-          <input type="checkbox" name="acceptTerms" value="true" required/>
-          <span class="bk-accept__box"></span>
-          <span class="bk-accept__text">
-            <strong>I have read and agree to the rental requirements above</strong>
-            &nbsp;&mdash; including the deposit, age/licence and full-to-full fuel policy.
-          </span>
-        </label>
+        <c:if test="${not editMode}">
+          <label class="bk-accept">
+            <input type="checkbox" name="acceptTerms" value="true" required/>
+            <span class="bk-accept__box"></span>
+            <span class="bk-accept__text">
+              <strong>I have read and agree to the rental requirements above</strong>
+              &nbsp;&mdash; including the deposit, age/licence and full-to-full fuel policy.
+            </span>
+          </label>
+        </c:if>
 
         <hr style="border:0; border-top:1px solid var(--glass-border); margin:28px 0;"/>
 
         <div style="display:flex; gap:10px; justify-content:flex-end;">
           <a href="${pageContext.request.contextPath}/booking?action=list" class="btn btn-ghost">Cancel</a>
           <button type="submit" class="btn btn-primary btn-lg" data-antigravity>
-            Confirm reservation
+            ${editMode ? 'Update reservation' : 'Confirm reservation'}
             <span class="ico-pill"><i class="ti ti-arrow-up-right"></i></span>
           </button>
         </div>

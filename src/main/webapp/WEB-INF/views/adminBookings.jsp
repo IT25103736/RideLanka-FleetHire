@@ -139,7 +139,7 @@
   <div class="page-header" style="margin-bottom:0;">
     <span class="eyebrow">Admin</span>
     <h1>All <em>reservations.</em></h1>
-    <p>Every booking across all members &mdash; sourced from <span class="mp-mono">data/bookings.txt</span>.</p>
+    <p>Every booking across all members &mdash; sourced from <span class="mp-mono">Microsoft SQL Server</span>.</p>
   </div>
   <a href="${pageContext.request.contextPath}/dashboard" class="btn btn-secondary">
     <i class="ti ti-arrow-left"></i> Back to Dashboard

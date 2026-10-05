@@ -19,17 +19,6 @@ public class Van extends Vehicle {
     public String getDisplayCategory() {
         return "Van";
     }
-
-    /**
-     * Saves as: vehicleId|Van|brand|model|year|price|available|cargoCapacityKg|imageUrl
-     */
-    @Override
-    public String toFileString() {
-        return getVehicleId() + "|" + getVehicleType() + "|" + getBrand() + "|" + getModel()
-                + "|" + getYear() + "|" + getRentalPricePerDay() + "|" + isAvailable()
-                + "|" + cargoCapacityKg + "|" + getImageUrl();
-    }
-
     public double getCargoCapacityKg()                { return cargoCapacityKg; }
     public void setCargoCapacityKg(double capacity)   { this.cargoCapacityKg = capacity; }
 

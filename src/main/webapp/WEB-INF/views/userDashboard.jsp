@@ -403,17 +403,10 @@
     <c:when test="${not empty recommendedVehicles}">
       <div class="ud-reco-grid">
         <c:forEach var="v" items="${recommendedVehicles}">
-          <c:choose>
-            <c:when test="${v.vehicleType == 'Van'}">
-              <c:set var="recoFallback" value="https://images.pexels.com/photos/2920064/pexels-photo-2920064.jpeg?auto=compress&cs=tinysrgb&w=600"/>
-            </c:when>
-            <c:otherwise>
-              <c:set var="recoFallback" value="https://images.pexels.com/photos/170811/pexels-photo-170811.jpeg?auto=compress&cs=tinysrgb&w=600"/>
-            </c:otherwise>
-          </c:choose>
+
           <a class="ud-reco" href="${pageContext.request.contextPath}/vehicle?action=view&id=${v.vehicleId}">
             <div class="ud-reco__media">
-              <img src="${not empty v.imageUrl ? v.imageUrl : recoFallback}" alt="${v.brand} ${v.model}" loading="lazy" decoding="async"/>
+              <c:choose><c:when test="${not empty v.imageUrl}"><img src="${v.imageUrl}" alt="${v.brand} ${v.model}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/images/vehicles/default-vehicle.jpg'"/></c:when><c:otherwise><div style="height:100%;min-height:115px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#182331,#0b1118);color:var(--bx-primary)"><i class="ti ti-car" style="font-size:34px"></i></div></c:otherwise></c:choose>
             </div>
             <div class="ud-reco__body">
               <div class="ud-reco__name">${v.brand} ${v.model}</div>
@@ -450,11 +443,11 @@
       new Chart(cvSpend, {
         type: 'line',
         data: { labels: sLabels, datasets: [{ label: 'LKR', data: sValues,
-          borderColor: VRMS_CHART.primary, backgroundColor: grad,
+          borderColor: RIDELANKA_CHART.primary, backgroundColor: grad,
           tension: 0.35, fill: true, pointRadius: 3 }] },
         options: { responsive: true, plugins: { legend: { display: false },
           tooltip: { callbacks: { label: function (c) { return 'LKR ' + c.parsed.y.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); } } } },
-          scales: { y: { grid: { color: VRMS_CHART.gridColor } }, x: { grid: { display: false } } } }
+          scales: { y: { grid: { color: RIDELANKA_CHART.gridColor } }, x: { grid: { display: false } } } }
       });
     }
 
@@ -465,7 +458,7 @@
         type: 'doughnut',
         data: { labels: ['Pending', 'Paid', 'Cancelled'],
           datasets: [{ data: [${pendingCount}, ${paidCount}, ${cancelledCount}],
-            backgroundColor: [VRMS_CHART.warn, VRMS_CHART.primary, VRMS_CHART.danger],
+            backgroundColor: [RIDELANKA_CHART.warn, RIDELANKA_CHART.primary, RIDELANKA_CHART.danger],
             borderColor: 'rgba(0,0,0,0.15)', borderWidth: 2 }] },
         options: { responsive: true, cutout: '62%', plugins: { legend: { position: 'bottom' } } }
       });

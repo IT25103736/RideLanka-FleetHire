@@ -214,7 +214,7 @@
           <div class="fld fld--with-icon">
             <span class="fld__lbl">Keyword</span>
             <i class="ti ti-zoom-in fld__icon"></i>
-            <input type="text" name="keyword"
+            <input type="text" name="keyword" maxlength="100"
                    placeholder="e.g. Aqua, Montero, HiAce…"
                    value="${param.keyword}"/>
           </div>
@@ -274,12 +274,12 @@
             </select>
           </div>
           <div class="fld">
-            <span class="fld__lbl">Cargo / Capacity (Van)</span>
+            <span class="fld__lbl">Passenger seats (Van)</span>
             <select name="capacity">
-              <option value="">Any capacity</option>
+              <option value="">Any seats</option>
               <c:forEach var="cap" items="${availableVanCapacities}">
                 <option value="${cap}" ${param.capacity == cap ? 'selected':''}>
-                  <fmt:formatNumber value="${cap}" pattern="#,##0"/> kg
+                  ${cap} seats
                 </option>
               </c:forEach>
             </select>

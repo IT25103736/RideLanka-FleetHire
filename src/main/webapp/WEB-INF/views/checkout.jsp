@@ -205,47 +205,6 @@
     margin-right: 5px; font-weight: 500; vertical-align: top;
   }
 
-  /* Loyalty card */
-  .ck-loyalty {
-    background: var(--glass-bg);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-            backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--r-shell);
-    box-shadow: var(--glass-shadow);
-    padding: 22px;
-  }
-  .ck-loyalty__head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-  .ck-loyalty__icon {
-    width: 36px; height: 36px; flex-shrink: 0;
-    border-radius: 10px;
-    background: linear-gradient(135deg, rgba(251,191,36,0.22) 0%, rgba(251,191,36,0.06) 100%);
-    border: 1px solid rgba(251,191,36,0.30);
-    color: var(--bx-warning);
-    display: inline-flex; align-items: center; justify-content: center;
-    font-size: 18px;
-  }
-  .ck-loyalty__lbl {
-    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
-    color: rgba(255,255,255,0.5); font-weight: 600;
-  }
-  .ck-loyalty__sub { font-size: 13px; font-weight: 500; color: #fff; margin-top: 2px; }
-  .ck-loyalty__val {
-    font-family: 'Space Grotesk', var(--font-sans);
-    font-size: 32px; font-weight: 700;
-    color: var(--bx-warning);
-    letter-spacing: -0.02em;
-    line-height: 1;
-  }
-  .ck-loyalty__val span {
-    font-family: var(--font-sans); font-size: 13px;
-    color: rgba(255,255,255,0.55); font-weight: 500; margin-left: 6px;
-  }
-  .ck-loyalty__note {
-    font-size: 12px; color: rgba(255,255,255,0.55);
-    margin-top: 8px;
-  }
-
   .ck-alert {
     padding: 14px 18px;
     border-radius: var(--r-md);
@@ -261,7 +220,7 @@
 <div class="page-header reveal">
   <span class="eyebrow">Settlement</span>
   <h1>Checkout, <em>quietly secure.</em></h1>
-  <p>Card or wallet &mdash; your details are encrypted in transit and never stored in plain text.</p>
+  <p>Card, mobile wallet or bank transfer &mdash; payment details are validated server-side and sensitive card data is not stored.</p>
 </div>
 
 <c:if test="${not empty errorMsg}">
@@ -274,20 +233,16 @@
   <div class="ck-card reveal">
     <div class="ck-card__head">
       <h3><i class="ti ti-credit-card"></i> Payment method</h3>
-      <span class="ck-secure"><i class="ti ti-shield-check"></i> 256-bit</span>
+      <span class="ck-secure"><i class="ti ti-shield-check"></i> Server validated</span>
     </div>
     <div class="ck-card__body">
-      <%-- bookingId / amount / customerName are populated by PaymentServlet#showCheckout
-           from the actual booking record (model attrs). Falling back to params keeps the
-           page usable when refreshed mid-flow. --%>
-      <c:set var="ckBookingId"   value="${not empty bookingId ? bookingId : param.bookingId}"/>
-      <c:set var="ckAmount"      value="${not empty amount ? amount : (not empty param.amount ? param.amount : 0)}"/>
-      <c:set var="ckCustomer"    value="${not empty customerName ? customerName : (not empty param.customerName ? param.customerName : (not empty sessionScope.loggedUser ? sessionScope.loggedUser.name : 'Guest'))}"/>
+      <%-- Checkout values come from MSSQL. Only bookingId is posted; amount and customer identity are revalidated server-side. --%>
+      <c:set var="ckBookingId" value="${bookingId}"/>
+      <c:set var="ckAmount" value="${amount}"/>
+      <c:set var="ckCustomer" value="${customerName}"/>
 
       <form action="${pageContext.request.contextPath}/payment/process" method="post" id="paymentForm" onsubmit="return validatePayment()">
-        <input type="hidden" name="bookingId"    value="${ckBookingId}"/>
-        <input type="hidden" name="amount"       value="${ckAmount}"/>
-        <input type="hidden" name="customerName" value="${ckCustomer}"/>
+        <input type="hidden" name="bookingId" value="${ckBookingId}"/>
 
         <div class="ck-fld ck-full" style="margin-bottom:22px;">
           <label class="ck-fld__lbl">Select method<span class="req">*</span></label>
@@ -310,6 +265,11 @@
                 <div class="s">eZ Cash, FriMi</div>
               </div>
             </label>
+            <label id="lbl-bank">
+              <input type="radio" name="paymentMethod" value="bank_transfer" id="pay-bank" onchange="togglePayMethod()"/>
+              <span class="ico"><i class="ti ti-building-bank"></i></span>
+              <div><div class="t">Bank Transfer</div><div class="s">Finance verification</div></div>
+            </label>
           </div>
         </div>
 
@@ -319,23 +279,26 @@
             <div class="ck-fld ck-full">
               <label class="ck-fld__lbl" for="cardHolderName">Card holder<span class="req">*</span></label>
               <input type="text" id="cardHolderName" name="cardHolderName"
-                     placeholder="As printed on card"/>
+                     placeholder="As printed on card" minlength="2" maxlength="80"
+                     pattern="[A-Za-z .'-]{2,80}" autocomplete="cc-name"/>
             </div>
             <div class="ck-fld ck-full">
               <label class="ck-fld__lbl" for="cardNumber">Card number<span class="req">*</span></label>
               <input type="text" id="cardNumber" name="cardNumber"
-                     placeholder="•••• •••• •••• ••••" maxlength="19"
-                     oninput="this.value=this.value.replace(/\D/g,'').replace(/(\d{4})/g,'$1 ').trim()"/>
+                     placeholder="•••• •••• •••• ••••" maxlength="23" inputmode="numeric"
+                     autocomplete="cc-number"
+                     oninput="this.value=this.value.replace(/\D/g,'').slice(0,19).replace(/(\d{4})(?=\d)/g,'$1 ')"/>
             </div>
             <div class="ck-fld">
               <label class="ck-fld__lbl" for="expiryDate">Expiry<span class="req">*</span></label>
-              <input type="text" id="expiryDate" name="expiryDate"
-                     placeholder="MM/YY" maxlength="5"/>
+              <input type="month" id="expiryDate" name="expiryDate"
+                     autocomplete="cc-exp"/>
             </div>
             <div class="ck-fld">
               <label class="ck-fld__lbl" for="cvv">CVV<span class="req">*</span></label>
               <input type="password" id="cvv" name="cvv"
-                     placeholder="•••" maxlength="4"/>
+                     placeholder="•••" minlength="3" maxlength="4" inputmode="numeric"
+                     pattern="[0-9]{3,4}" autocomplete="cc-csc"/>
             </div>
           </div>
         </div>
@@ -359,20 +322,27 @@
                      pattern="[0-9]*"
                      oninput="this.value=this.value.replace(/\D/g,'')"/>
             </div>
-            <div class="ck-fld">
-              <label class="ck-fld__lbl" for="walletBalance">Balance &middot; LKR</label>
-              <input type="number" id="walletBalance" name="walletBalance"
-                     placeholder="e.g. 50,000" value="50000" min="0" step="100"/>
+
+          </div>
+        </div>
+
+        <!-- Bank transfer fields -->
+        <div id="bank-fields" style="display:none;">
+          <div class="ck-grid-fields">
+            <div class="ck-fld ck-full">
+              <label class="ck-fld__lbl" for="transferReference">Transfer reference<span class="req">*</span></label>
+              <input type="text" id="transferReference" name="transferReference" maxlength="100" placeholder="Bank receipt / transaction reference"/>
+              <small style="font-size:11px;color:rgba(255,255,255,0.5);">The booking remains pending until Finance approves this reference.</small>
             </div>
           </div>
         </div>
 
         <div class="ck-divider"></div>
 
-        <div class="ck-fld ck-full" style="margin-bottom:24px;">
-          <label class="ck-fld__lbl">Promo code</label>
+        <div class="ck-fld ck-full" id="promo-block" style="margin-bottom:24px;">
+          <label class="ck-fld__lbl">Promo code <small style="font-weight:400;color:rgba(255,255,255,0.45);">(card/wallet)</small></label>
           <div class="ck-promo-row">
-            <input type="text" name="promoCode" placeholder="Enter code…"
+            <input type="text" name="promoCode" placeholder="Enter code…" maxlength="40"
                    value="${param.promoCode}"/>
             <button type="button" class="btn btn-secondary" onclick="applyPromo()">Apply</button>
           </div>
@@ -388,7 +358,7 @@
         </button>
 
         <p class="ck-secure-note">
-          <i class="ti ti-shield-check"></i> Your payment details are encrypted end-to-end.
+          <i class="ti ti-shield-check"></i> The application never stores the full card number or CVV; MSSQL stores only the payment result/reference.
         </p>
       </form>
     </div>
@@ -417,21 +387,7 @@
       </div>
     </div>
 
-    <div class="ck-loyalty reveal">
-      <div class="ck-loyalty__head">
-        <span class="ck-loyalty__icon"><i class="ti ti-coin"></i></span>
-        <div>
-          <div class="ck-loyalty__lbl">Loyalty</div>
-          <div class="ck-loyalty__sub">Points on file</div>
-        </div>
-      </div>
-      <div class="ck-loyalty__val">
-        ${not empty loyaltyPoints ? loyaltyPoints : 0}<span>pts</span>
-      </div>
-      <div class="ck-loyalty__note">
-        Redeemable on your next booking &mdash; one point per LKR 1,000.
-      </div>
-    </div>
+
   </div>
 
 </div>
@@ -439,27 +395,61 @@
 <script>
   function togglePayMethod() {
     var isCard = document.getElementById('pay-card').checked;
-    document.getElementById('card-fields').style.display   = isCard ? '' : 'none';
-    document.getElementById('wallet-fields').style.display = isCard ? 'none' : '';
+    var isWallet = document.getElementById('pay-wallet').checked;
+    var isBank = document.getElementById('pay-bank').checked;
+    document.getElementById('card-fields').style.display = isCard ? '' : 'none';
+    document.getElementById('wallet-fields').style.display = isWallet ? '' : 'none';
+    document.getElementById('bank-fields').style.display = isBank ? '' : 'none';
     document.getElementById('lbl-card').classList.toggle('is-active', isCard);
-    document.getElementById('lbl-wallet').classList.toggle('is-active', !isCard);
+    document.getElementById('lbl-wallet').classList.toggle('is-active', isWallet);
+    document.getElementById('lbl-bank').classList.toggle('is-active', isBank);
+    document.getElementById('promo-block').style.opacity = isBank ? '0.55' : '1';
+    document.querySelector('[name=promoCode]').disabled = isBank;
+    document.getElementById('payText').innerText = isBank ? 'Submit transfer for verification' : 'Pay securely';
+
+    // Keep browser validation aligned with the currently selected payment method.
+    ['cardHolderName','cardNumber','expiryDate','cvv'].forEach(function(id){
+      document.getElementById(id).required = isCard;
+    });
+    document.getElementById('walletType').required = isWallet;
+    document.getElementById('walletNumber').required = isWallet;
+    document.getElementById('transferReference').required = isBank;
   }
+
   function applyPromo() {
+    if (document.getElementById('pay-bank').checked) {
+      alert('Promo codes are applied to immediate card/wallet payments only.');
+      return;
+    }
     var code = document.querySelector('[name=promoCode]').value.trim();
     if (!code) { alert('Please enter a promo code.'); return; }
-    alert('Promo code "' + code + '" queued — server-side validation will apply.');
+    alert('Promo code "' + code + '" will be validated server-side when payment is submitted.');
   }
+
   function validatePayment() {
     var isCard = document.getElementById('pay-card').checked;
+    var isWallet = document.getElementById('pay-wallet').checked;
+    var isBank = document.getElementById('pay-bank').checked;
+
     if (isCard) {
+      var holder = document.getElementById('cardHolderName').value.trim();
       var cardNum = document.getElementById('cardNumber').value.replace(/\s/g, '');
-      if (cardNum.length < 15 || cardNum.length > 16) {
-        alert('Please enter a valid 15 or 16 digit card number.');
-        return false;
-      }
-      var expiry = document.getElementById('expiryDate').value;
-      if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
-        alert('Please enter a valid expiry date in MM/YY format.');
+      var expiry = document.getElementById('expiryDate').value.trim();
+      var cvv = document.getElementById('cvv').value.trim();
+      if (!/^[A-Za-z .'-]{2,80}$/.test(holder)) { alert('Please enter the cardholder name as printed on the card.'); return false; }
+      if (!/^\d{13,19}$/.test(cardNum)) { alert('Please enter a valid 13–19 digit card number.'); return false; }
+      if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(expiry)) { alert('Please select a valid card expiry month.'); return false; }
+      var expiryMonth = new Date(expiry + '-01T00:00:00');
+      var now = new Date();
+      var currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      if (expiryMonth < currentMonth) { alert('The card has expired. Please choose a valid expiry month.'); return false; }
+      if (!/^\d{3,4}$/.test(cvv)) { alert('Please enter a valid CVV.'); return false; }
+    } else if (isWallet) {
+      if (!document.getElementById('walletType').value) { alert('Please select a wallet provider.'); return false; }
+      if (!/^(?:0)?7\d{8}$/.test(document.getElementById('walletNumber').value.trim())) { alert('Please enter a valid wallet mobile number.'); return false; }
+    } else if (isBank) {
+      if (!/^[A-Za-z0-9._\/-]{4,100}$/.test(document.getElementById('transferReference').value.trim())) {
+        alert('Enter a valid bank transfer reference (4–100 letters/numbers).');
         return false;
       }
     }
@@ -467,23 +457,32 @@
     var btn = document.getElementById('payBtn');
     var icon = document.getElementById('payIcon');
     var text = document.getElementById('payText');
-
     btn.style.opacity = '0.85';
     btn.style.cursor = 'progress';
     icon.className = 'ti ti-loader';
-    icon.style.animation = 'vrms-spin 1s linear infinite';
-    text.innerText = ' Processing…';
-
+    icon.style.animation = 'ridelanka-spin 1s linear infinite';
+    text.innerText = isBank ? ' Submitting…' : ' Processing…';
     if (!document.getElementById('spinStyle')) {
       var style = document.createElement('style');
       style.id = 'spinStyle';
-      style.innerHTML = '@keyframes vrms-spin { to { transform: rotate(360deg); } }';
+      style.innerHTML = '@keyframes ridelanka-spin { to { transform: rotate(360deg); } }';
       document.head.appendChild(style);
     }
-
     setTimeout(function() { btn.disabled = true; }, 50);
     return true;
   }
+
+  (function configureExpiryMonth(){
+    var expiry = document.getElementById('expiryDate');
+    if (!expiry) return;
+    var now = new Date();
+    var yyyy = now.getFullYear();
+    var mm = String(now.getMonth() + 1).padStart(2, '0');
+    expiry.min = yyyy + '-' + mm;
+    expiry.max = (yyyy + 20) + '-' + mm;
+  })();
+
+  togglePayMethod();
 </script>
 
 <%@ include file="/WEB-INF/views/common/footer.jsp" %>

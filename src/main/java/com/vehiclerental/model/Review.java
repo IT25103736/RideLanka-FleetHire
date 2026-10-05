@@ -17,6 +17,10 @@ public class Review {
 
     public Review() {}
 
+    protected Review(String reviewType) {
+        this.reviewType = reviewType;
+    }
+
     public Review(String reviewId, String vehicleId, String userId,
                   String username, int rating, String comment,
                   String reviewDate, String status, String reviewType) {
@@ -43,20 +47,6 @@ public class Review {
         for (int i = rating; i < 5; i++)   sb.append("☆");
         return sb.toString();
     }
-
-
-    public String toFileString() {
-        return reviewId   + "|" +
-               vehicleId  + "|" +
-               userId     + "|" +
-               username   + "|" +
-               rating     + "|" +
-               comment    + "|" +
-               reviewDate + "|" +
-               status     + "|" +
-               reviewType;
-    }
-
 
     public String getReviewId()   { return reviewId; }
     public void   setReviewId(String reviewId)   { this.reviewId = reviewId; }

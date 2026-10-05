@@ -426,25 +426,22 @@
         <i class="ti ti-info-circle"></i>
         <div>
           <strong>What happens next?</strong><br/>
-          You'll receive a confirmation email within 5 minutes. Our host calls you to confirm
-          pickup location and time within 2 hours. Payment is collected at pickup &mdash; cash, card or eZ Cash.
+          Your reservation is stored in RideLanka FleetHire and is visible under My Reservations.
+          Complete payment through the payment page when required; booking and payment status are read from MSSQL.
         </div>
       </div>
 
-      <c:if test="${not empty param.phone}">
+      <c:if test="${not empty whatsappUrl}">
         <div class="wa-card">
           <span class="wa-card__ico"><i class="ti ti-brand-whatsapp"></i></span>
           <div class="wa-card__body">
-            <div class="wa-card__title">A WhatsApp confirmation is on the way</div>
+            <div class="wa-card__title">Optional WhatsApp contact</div>
             <div class="wa-card__sub">
-              Our team will WhatsApp your full booking confirmation to
-              <strong>${param.phone}</strong> from our official line
-              <strong>+94 77 811 9913</strong> shortly &mdash; including the invoice
-              link once payment is settled. Save our number so it doesn't land in
-              the spam folder.
+              Use the button to open WhatsApp with a pre-filled message about booking
+              <strong>${booking.bookingId}</strong>. Sending the message is optional and happens only after you confirm it in WhatsApp.
             </div>
           </div>
-          <a href="https://wa.me/94778119913?text=Hi%20VRMS%20%E2%80%94%20regarding%20my%20booking%20${booking.bookingId}"
+          <a href="${whatsappUrl}"
              target="_blank" rel="noopener" class="wa-card__cta">
             <i class="ti ti-brand-whatsapp"></i> Message us
           </a>
@@ -455,7 +452,7 @@
   </div>
 
   <div style="display:flex; gap:10px; justify-content:center; margin-top:28px; flex-wrap:wrap;">
-    <a href="${pageContext.request.contextPath}/payment/checkout?bookingId=${booking.bookingId}&amount=${totalCost}&customerName=${customerName}"
+    <a href="${pageContext.request.contextPath}/payment/checkout?bookingId=${booking.bookingId}"
        class="btn btn-primary btn-lg" data-antigravity>
       Pay now
       <span class="ico-pill"><i class="ti ti-arrow-up-right"></i></span>
